@@ -1,0 +1,8 @@
+addReviewers: true
+addAssignees: author
+
+reviewers:
+  - kyer5
+  - gihhyeon
+
+numberOfReviewers: 0
