@@ -155,7 +155,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         GlobalErrorCode globalErrorCode = GlobalErrorCode.from(statusCode);
         log.warn("Spring MVC exception handled as {}: {}", globalErrorCode.getCode(), ex.getMessage());
 
-        return buildResponseEntity(globalErrorCode, headers);
+        return ResponseEntity.status(statusCode)
+                .headers(headers)
+                .body(ApiResponse.fail(globalErrorCode, null));
     }
 
     private ResponseEntity<Object> buildResponseEntity(BaseError baseError, HttpHeaders headers) {
