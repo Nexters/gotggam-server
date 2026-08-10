@@ -33,15 +33,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("BusinessException occurred: {}", e.getMessage());
 
         return ResponseEntity.status(baseError.getHttpStatus())
-                .body(ApiResponse.fail(baseError, e.getFieldErrors()));
+                .body(ApiResponse.fail(ErrorResponse.of(baseError, e.getFieldErrors())));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("Unhandled exception occurred", e);
 
-        return ResponseEntity.status(GlobalErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
-                .body(ApiResponse.fail(GlobalErrorCode.INTERNAL_SERVER_ERROR, null));
+        GlobalErrorCode globalErrorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
+        ErrorResponse errorResponse = new ErrorResponse(e.getClass().getSimpleName(), globalErrorCode.getMessage(), null);
+        return ResponseEntity.status(globalErrorCode.getHttpStatus())
+                .body(ApiResponse.fail(errorResponse));
     }
 
     @Override
@@ -57,7 +59,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         log.warn("Method argument not valid: {}", fieldErrors);
 
-        return buildResponseEntity(GlobalErrorCode.INVALID_INPUT_VALUE, headers, fieldErrors);
+        return buildResponseEntity(ex, GlobalErrorCode.INVALID_INPUT_VALUE, headers, fieldErrors);
     }
 
     @Override
@@ -69,7 +71,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("Http request method not supported: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.METHOD_NOT_ALLOWED, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.METHOD_NOT_ALLOWED, headers);
     }
 
     @Override
@@ -81,7 +83,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("Missing servlet request parameter: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.MISSING_REQUEST_PARAMETER, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.MISSING_REQUEST_PARAMETER, headers);
     }
 
     @Override
@@ -93,7 +95,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("Type mismatch: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.INVALID_TYPE_VALUE, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.INVALID_TYPE_VALUE, headers);
     }
 
     @Override
@@ -105,7 +107,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("Http message not readable: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.INVALID_JSON_FORMAT, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.INVALID_JSON_FORMAT, headers);
     }
 
     @Override
@@ -117,7 +119,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("Max upload size exceeded: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.FILE_TOO_LARGE, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.FILE_TOO_LARGE, headers);
     }
 
     @Override
@@ -129,7 +131,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("No handler found: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.NOT_FOUND_END_POINT, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.NOT_FOUND_END_POINT, headers);
     }
 
     @Override
@@ -141,7 +143,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ) {
         log.warn("No resource found: {}", ex.getMessage());
 
-        return buildResponseEntity(GlobalErrorCode.NOT_FOUND_END_POINT, headers);
+        return buildResponseEntity(ex, GlobalErrorCode.NOT_FOUND_END_POINT, headers);
     }
 
     @Override
@@ -152,27 +154,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatusCode statusCode,
             WebRequest request
     ) {
-        GlobalErrorCode globalErrorCode = GlobalErrorCode.from(statusCode);
-        log.warn("Spring MVC exception handled as {}: {}", globalErrorCode.getCode(), ex.getMessage());
+        log.warn("Spring MVC exception handled as {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
 
+        ErrorResponse errorResponse = new ErrorResponse(ex.getClass().getSimpleName(), ex.getMessage(), null);
         return ResponseEntity.status(statusCode)
                 .headers(headers)
-                .body(ApiResponse.fail(globalErrorCode, null));
+                .body(ApiResponse.fail(errorResponse));
     }
 
-    private ResponseEntity<Object> buildResponseEntity(BaseError baseError, HttpHeaders headers) {
-        return ResponseEntity.status(baseError.getHttpStatus())
-                .headers(headers)
-                .body(ApiResponse.fail(baseError, null));
+    private ResponseEntity<Object> buildResponseEntity(Exception ex, BaseError baseError, HttpHeaders headers) {
+        return buildResponseEntity(ex, baseError, headers, null);
     }
 
     private ResponseEntity<Object> buildResponseEntity(
+            Exception ex,
             BaseError baseError,
             HttpHeaders headers,
-            List<ErrorResponse.FieldError> fieldErrors
+            @Nullable List<ErrorResponse.FieldError> fieldErrors
     ) {
+        ErrorResponse errorResponse = new ErrorResponse(ex.getClass().getSimpleName(), baseError.getMessage(), fieldErrors);
         return ResponseEntity.status(baseError.getHttpStatus())
                 .headers(headers)
-                .body(ApiResponse.fail(baseError, fieldErrors));
+                .body(ApiResponse.fail(errorResponse));
     }
 }

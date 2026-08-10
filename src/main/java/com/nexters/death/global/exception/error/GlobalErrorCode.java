@@ -3,7 +3,6 @@ package com.nexters.death.global.exception.error;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 
 @Getter
 @RequiredArgsConstructor
@@ -22,20 +21,4 @@ public enum GlobalErrorCode implements BaseError {
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
-
-    public static GlobalErrorCode from(HttpStatusCode statusCode) {
-        if (statusCode.equals(HttpStatus.METHOD_NOT_ALLOWED)) {
-            return METHOD_NOT_ALLOWED;
-        }
-        if (statusCode.equals(HttpStatus.NOT_FOUND)) {
-            return NOT_FOUND_END_POINT;
-        }
-        if (statusCode.equals(HttpStatus.CONTENT_TOO_LARGE)) {
-            return FILE_TOO_LARGE;
-        }
-        if (statusCode.is5xxServerError()) {
-            return INTERNAL_SERVER_ERROR;
-        }
-        return INVALID_INPUT_VALUE;
-    }
 }
