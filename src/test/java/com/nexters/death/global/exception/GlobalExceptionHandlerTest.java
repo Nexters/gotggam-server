@@ -37,7 +37,6 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test/success"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.message").value("hello"))
                 .andExpect(jsonPath("$.error").doesNotExist());
     }
@@ -47,7 +46,6 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(post("/test/business-error"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("COMMON_004"))
                 .andExpect(jsonPath("$.error.message").value("잘못된 입력값입니다."));
     }
@@ -61,7 +59,6 @@ class GlobalExceptionHandlerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.data").doesNotExist())
                 .andExpect(jsonPath("$.error.code").value("MethodArgumentNotValidException"))
                 .andExpect(jsonPath("$.error.fieldErrors.length()").value(2))

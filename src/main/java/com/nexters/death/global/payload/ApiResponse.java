@@ -8,16 +8,15 @@ import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
-        boolean success,
         @Nullable T data,
         @Nullable ErrorResponse error,
         LocalDateTime timestamp
 ) {
     public static <T> ApiResponse<T> success(@Nullable T data) {
-        return new ApiResponse<>(true, data, null, LocalDateTime.now());
+        return new ApiResponse<>(data, null, LocalDateTime.now());
     }
 
     public static <T> ApiResponse<T> fail(ErrorResponse errorResponse) {
-        return new ApiResponse<>(false, null, errorResponse, LocalDateTime.now());
+        return new ApiResponse<>(null, errorResponse, LocalDateTime.now());
     }
 }
