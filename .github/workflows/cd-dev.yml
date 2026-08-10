@@ -4,6 +4,9 @@ on:
   push:
     branches: [develop]
 
+permissions:
+  contents: read
+
 concurrency:
   group: cd-dev
   cancel-in-progress: false
@@ -18,11 +21,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Write .env
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
+          umask 077
           cat > .env <<EOF
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=$POSTGRES_DB
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
           EOF
 
       - name: Deploy
