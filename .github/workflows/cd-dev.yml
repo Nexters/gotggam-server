@@ -1,0 +1,33 @@
+name: CD (dev)
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: cd-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, dev]
+    environment: dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write .env
+        run: |
+          cat > .env <<EOF
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          EOF
+
+      - name: Deploy
+        run: docker compose up -d --build
+
+      - name: Prune dangling images
+        if: always()
+        run: docker image prune -f
