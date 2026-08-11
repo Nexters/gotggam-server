@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,10 +17,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(
-    name = "question_option",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"id", "question_id"})
-)
+@Table(name = "question_option")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QuestionOption extends BaseEntity {
 
