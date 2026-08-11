@@ -41,7 +41,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("Unhandled exception occurred", e);
 
         GlobalErrorCode globalErrorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
-        ErrorResponse errorResponse = new ErrorResponse(e.getClass().getSimpleName(), globalErrorCode.getMessage(), null);
+        ErrorResponse errorResponse = new ErrorResponse(globalErrorCode.getCode(), globalErrorCode.getMessage(), null);
         return ResponseEntity.status(globalErrorCode.getHttpStatus())
                 .body(ApiResponse.fail(globalErrorCode.getHttpStatus().value(), errorResponse));
     }

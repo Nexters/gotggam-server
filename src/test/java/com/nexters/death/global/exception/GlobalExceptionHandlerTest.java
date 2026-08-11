@@ -122,12 +122,12 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void 처리되지_않은_예외가_발생하면_500_상태코드와_예외_클래스명을_반환한다() throws Exception {
+    void 처리되지_않은_예외가_발생하면_500_상태코드와_공통_에러코드를_반환한다() throws Exception {
         mockMvc.perform(get("/test/unknown-error"))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
-                .andExpect(jsonPath("$.error.code").value("IllegalStateException"))
+                .andExpect(jsonPath("$.error.code").value("COMMON_001"))
                 .andExpect(jsonPath("$.error.message").value("서버 내부 오류입니다."));
     }
 
