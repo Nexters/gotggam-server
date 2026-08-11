@@ -52,7 +52,8 @@ public class Result extends BaseCreatedAtEntity {
     private BigDecimal attitudePenalty;
 
     // 3개 영역(body/mind/attitude) 페널티 합계. 저장 시점에 계산해서 넣는다.
-    @Column(name = "total_penalty", nullable = false, precision = 5, scale = 2)
+    // 정책상 합계가 999.99를 넘지는 않지만, 안전하게 precision을 한 자리 더 여유있게 잡는다.
+    @Column(name = "total_penalty", nullable = false, precision = 6, scale = 2)
     private BigDecimal totalPenalty;
 
     @Column(name = "expected_life", nullable = false, precision = 5, scale = 2)
