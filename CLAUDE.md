@@ -48,6 +48,19 @@ com.nexters.death
     - Controller는 Service만 호출하고, Repository/Entity에 직접 접근하지 않는다.
     - Service는 자신이 속한 도메인의 Repository를 통해서만 Entity에 접근한다.
     - 다른 도메인의 데이터가 필요한 경우 해당 도메인의 Service를 통해서만 접근한다. (다른 도메인의 Repository/Entity 직접 참조 금지)
+- 특정 도메인에 속하지 않고 프로젝트 전체에서 공통으로 쓰이는 것(예: Security, CORS, Swagger 등 전역 설정)만 `global` 패키지에 둔다. 도메인 로직이나 특정 도메인에서만 쓰이는 코드는 `global`에 두지 않는다.
+
+```
+com.nexters.death
+├── global
+│   └── config
+├── member
+│   ├── controller
+│   ├── service
+│   ├── repository
+│   └── entity
+└── ...
+```
 
 ## 코드 스타일 컨벤션
 
