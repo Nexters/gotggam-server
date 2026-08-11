@@ -16,6 +16,7 @@ public enum GlobalErrorCode implements BaseError {
     MISSING_REQUEST_PARAMETER(HttpStatus.BAD_REQUEST, "COMMON_006", "필수 요청 파라미터가 누락되었습니다."),
     INVALID_JSON_FORMAT(HttpStatus.BAD_REQUEST, "COMMON_007", "요청 본문 형식이 올바르지 않습니다."),
     FILE_TOO_LARGE(HttpStatus.CONTENT_TOO_LARGE, "COMMON_008", "업로드 용량이 허용 범위를 초과했습니다."),
+    BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON_009", "잘못된 요청입니다."),
     ;
 
     private final HttpStatus httpStatus;

@@ -63,7 +63,7 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.data").doesNotExist())
-                .andExpect(jsonPath("$.error.code").value("MethodArgumentNotValidException"))
+                .andExpect(jsonPath("$.error.code").value("COMMON_004"))
                 .andExpect(jsonPath("$.error.fieldErrors.length()").value(2))
                 .andExpect(jsonPath("$.error.fieldErrors[*].field", containsInAnyOrder("name", "age")));
     }
@@ -74,7 +74,7 @@ class GlobalExceptionHandlerTest {
                 .andDo(print())
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(jsonPath("$.status").value(405))
-                .andExpect(jsonPath("$.error.code").value("HttpRequestMethodNotSupportedException"))
+                .andExpect(jsonPath("$.error.code").value("COMMON_003"))
                 .andExpect(jsonPath("$.error.message").value("지원하지 않는 HTTP 메서드입니다."));
     }
 
@@ -84,7 +84,7 @@ class GlobalExceptionHandlerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error.code").value("MissingServletRequestParameterException"))
+                .andExpect(jsonPath("$.error.code").value("COMMON_006"))
                 .andExpect(jsonPath("$.error.message").value("필수 요청 파라미터가 누락되었습니다."));
     }
 
@@ -94,7 +94,7 @@ class GlobalExceptionHandlerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error.code").value("MethodArgumentTypeMismatchException"))
+                .andExpect(jsonPath("$.error.code").value("COMMON_005"))
                 .andExpect(jsonPath("$.error.message").value("요청 타입이 올바르지 않습니다."));
     }
 
@@ -106,19 +106,20 @@ class GlobalExceptionHandlerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error.code").value("HttpMessageNotReadableException"))
+                .andExpect(jsonPath("$.error.code").value("COMMON_007"))
                 .andExpect(jsonPath("$.error.message").value("요청 본문 형식이 올바르지 않습니다."));
     }
 
     @Test
-    void 지원하지_않는_미디어_타입으로_요청하면_415_상태코드와_예외_정보를_담아_실패_응답을_반환한다() throws Exception {
+    void 지원하지_않는_미디어_타입으로_요청하면_415_상태코드와_고정된_에러코드_메시지를_반환한다() throws Exception {
         mockMvc.perform(post("/test")
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("plain text"))
                 .andDo(print())
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.status").value(415))
-                .andExpect(jsonPath("$.error.code").value("HttpMediaTypeNotSupportedException"));
+                .andExpect(jsonPath("$.error.code").value("COMMON_009"))
+                .andExpect(jsonPath("$.error.message").value("잘못된 요청입니다."));
     }
 
     @Test
