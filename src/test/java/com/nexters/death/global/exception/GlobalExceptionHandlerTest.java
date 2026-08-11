@@ -37,6 +37,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test/success"))
                 .andDo(print())
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data.message").value("hello"))
                 .andExpect(jsonPath("$.error").doesNotExist());
     }
@@ -46,6 +47,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(post("/test/business-error"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error.code").value("COMMON_004"))
                 .andExpect(jsonPath("$.error.message").value("잘못된 입력값입니다."));
     }
@@ -59,6 +61,7 @@ class GlobalExceptionHandlerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.data").doesNotExist())
                 .andExpect(jsonPath("$.error.code").value("MethodArgumentNotValidException"))
                 .andExpect(jsonPath("$.error.fieldErrors.length()").value(2))
@@ -70,6 +73,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test"))
                 .andDo(print())
                 .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405))
                 .andExpect(jsonPath("$.error.code").value("HttpRequestMethodNotSupportedException"))
                 .andExpect(jsonPath("$.error.message").value("지원하지 않는 HTTP 메서드입니다."));
     }
@@ -79,6 +83,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test/param"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error.code").value("MissingServletRequestParameterException"))
                 .andExpect(jsonPath("$.error.message").value("필수 요청 파라미터가 누락되었습니다."));
     }
@@ -88,6 +93,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test/number").param("value", "not-a-number"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error.code").value("MethodArgumentTypeMismatchException"))
                 .andExpect(jsonPath("$.error.message").value("요청 타입이 올바르지 않습니다."));
     }
@@ -99,6 +105,7 @@ class GlobalExceptionHandlerTest {
                         .content("{ invalid json"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error.code").value("HttpMessageNotReadableException"))
                 .andExpect(jsonPath("$.error.message").value("요청 본문 형식이 올바르지 않습니다."));
     }
@@ -110,6 +117,7 @@ class GlobalExceptionHandlerTest {
                         .content("plain text"))
                 .andDo(print())
                 .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.status").value(415))
                 .andExpect(jsonPath("$.error.code").value("HttpMediaTypeNotSupportedException"));
     }
 
@@ -118,6 +126,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test/unknown-error"))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.error.code").value("IllegalStateException"))
                 .andExpect(jsonPath("$.error.message").value("서버 내부 오류입니다."));
     }

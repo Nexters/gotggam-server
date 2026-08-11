@@ -33,7 +33,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("BusinessException occurred: {}", e.getMessage());
 
         return ResponseEntity.status(baseError.getHttpStatus())
-                .body(ApiResponse.fail(ErrorResponse.of(baseError, e.getFieldErrors())));
+                .body(ApiResponse.fail(baseError.getHttpStatus().value(), ErrorResponse.of(baseError, e.getFieldErrors())));
     }
 
     @ExceptionHandler(Exception.class)
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         GlobalErrorCode globalErrorCode = GlobalErrorCode.INTERNAL_SERVER_ERROR;
         ErrorResponse errorResponse = new ErrorResponse(e.getClass().getSimpleName(), globalErrorCode.getMessage(), null);
         return ResponseEntity.status(globalErrorCode.getHttpStatus())
-                .body(ApiResponse.fail(errorResponse));
+                .body(ApiResponse.fail(globalErrorCode.getHttpStatus().value(), errorResponse));
     }
 
     @Override
@@ -159,7 +159,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(ex.getClass().getSimpleName(), ex.getMessage(), null);
         return ResponseEntity.status(statusCode)
                 .headers(headers)
-                .body(ApiResponse.fail(errorResponse));
+                .body(ApiResponse.fail(statusCode.value(), errorResponse));
     }
 
     private ResponseEntity<Object> buildResponseEntity(Exception ex, BaseError baseError, HttpHeaders headers) {
@@ -175,6 +175,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(ex.getClass().getSimpleName(), baseError.getMessage(), fieldErrors);
         return ResponseEntity.status(baseError.getHttpStatus())
                 .headers(headers)
-                .body(ApiResponse.fail(errorResponse));
+                .body(ApiResponse.fail(baseError.getHttpStatus().value(), errorResponse));
     }
 }
