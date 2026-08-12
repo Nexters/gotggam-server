@@ -10,3 +10,8 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+# 로컬 실연동 시 GEMINI_ENABLED=true, GEMINI_API_KEY=... 환경변수 주입. 키는 커밋하지 않는다.
+gemini:
+  enabled: ${GEMINI_ENABLED:true}
+  api-key: ${GEMINI_API_KEY:}
