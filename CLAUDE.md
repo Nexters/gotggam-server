@@ -85,14 +85,24 @@ public class Member {
 
 - 단순 Getter는 `@Getter`를 사용한다. (Setter는 지양)
 - 기본 생성자는 `@NoArgsConstructor(access = AccessLevel.PROTECTED)`를 사용한다.
+- 생성자는 `@Builder`로 통일한다. 생성자를 `private`으로 선언해 Builder를 거치지 않고는 생성할 수 없게 한다.
 - 생성자 파라미터가 한 줄을 넘어가면 파라미터마다 개행한다.
 
 ```java
-public Member(
+@Builder
+private Member(
     String name,
     String email,
     Role role
 ) {
+    ...
+}
+```
+
+```java
+// name/description처럼 같은 String 타입이 여러 개라 Builder 사용
+@Builder
+private Category(String name, String description) {
     ...
 }
 ```
