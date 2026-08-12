@@ -22,6 +22,10 @@ public class Category extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 관리자가 name(한글)을 바꿔도 매핑이 깨지지 않도록, 로직/API에서 참조하는 키.
+    @Column(name = "category_key", nullable = false, unique = true, length = 30)
+    private String categoryKey;
+
     @Column(nullable = false, unique = true, length = 30)
     private String name;
 
@@ -29,7 +33,8 @@ public class Category extends BaseEntity {
     private String description;
 
     @Builder
-    private Category(String name, String description) {
+    private Category(String categoryKey, String name, String description) {
+        this.categoryKey = categoryKey;
         this.name = name;
         this.description = description;
     }
