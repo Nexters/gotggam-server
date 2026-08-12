@@ -1,9 +1,9 @@
 package com.nexters.death.result.entity;
 
-import com.nexters.death.global.entity.BaseCreatedAtEntity;
 import com.nexters.death.question.entity.SpecialRule;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,9 +12,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
 @Entity
@@ -25,8 +28,9 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(columnNames = {"result_id", "display_order"})
     }
 )
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ResultSpecialRule extends BaseCreatedAtEntity {
+public class ResultSpecialRule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,6 +46,10 @@ public class ResultSpecialRule extends BaseCreatedAtEntity {
 
     @Column(name = "display_order", nullable = false)
     private Short displayOrder;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     public ResultSpecialRule(Result result, SpecialRule specialRule, Short displayOrder) {
         this.result = result;

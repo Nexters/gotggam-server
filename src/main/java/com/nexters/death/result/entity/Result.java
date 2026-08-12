@@ -1,8 +1,8 @@
 package com.nexters.death.result.entity;
 
-import com.nexters.death.global.entity.BaseCreatedAtEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -11,16 +11,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
 @Entity
 @Table(name = "result")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Result extends BaseCreatedAtEntity {
+public class Result {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,6 +68,10 @@ public class Result extends BaseCreatedAtEntity {
 
     @Column(name = "warning_message", length = 255)
     private String warningMessage;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     public Result(
         String name,
