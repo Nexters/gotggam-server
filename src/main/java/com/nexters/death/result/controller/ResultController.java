@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "🪦 Result API", description = "설문 결과 API")
+@Tag(name = "Result API", description = "설문 결과 API")
 @RestController
 @RequestMapping("/api/v1/results")
 @RequiredArgsConstructor
