@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +28,8 @@ public class Category extends BaseEntity {
     @Column(length = 255)
     private String description;
 
-    public Category(String name, String description) {
+    @Builder
+    private Category(String name, String description) {
         this.name = name;
         this.description = description;
     }

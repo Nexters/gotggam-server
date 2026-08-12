@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -43,7 +44,8 @@ public class ResultCharacter extends BaseEntity {
     @Column(name = "mouth_type", nullable = false)
     private Short mouthType;
 
-    public ResultCharacter(
+    @Builder
+    private ResultCharacter(
         Result result,
         Short faceType,
         Short hairType,

@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +28,8 @@ public class Act extends BaseEntity {
     @Column(nullable = false, length = 30)
     private String label;
 
-    public Act(String actKey, String label) {
+    @Builder
+    private Act(String actKey, String label) {
         this.actKey = actKey;
         this.label = label;
     }

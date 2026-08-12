@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,7 +32,8 @@ public class LifeExpectancyPolicy extends BaseEntity {
     @Column(name = "min_remaining_life", nullable = false, precision = 5, scale = 2)
     private BigDecimal minRemainingLife;
 
-    public LifeExpectancyPolicy(
+    @Builder
+    private LifeExpectancyPolicy(
         BigDecimal maleExpectancy,
         BigDecimal femaleExpectancy,
         BigDecimal minRemainingLife

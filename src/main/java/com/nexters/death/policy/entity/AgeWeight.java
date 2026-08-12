@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -39,7 +40,8 @@ public class AgeWeight extends BaseEntity {
     @Column(name = "attitude_weight", nullable = false, precision = 3, scale = 2)
     private BigDecimal attitudeWeight;
 
-    public AgeWeight(
+    @Builder
+    private AgeWeight(
         Short startAge,
         Short endAge,
         BigDecimal bodyWeight,

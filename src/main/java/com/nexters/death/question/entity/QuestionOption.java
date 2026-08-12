@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -41,7 +42,8 @@ public class QuestionOption extends BaseEntity {
     @Column(name = "life_penalty", nullable = false, precision = 5, scale = 2)
     private BigDecimal lifePenalty;
 
-    public QuestionOption(
+    @Builder
+    private QuestionOption(
         Question question,
         String content,
         String feedback,
