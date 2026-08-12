@@ -1,11 +1,13 @@
 package com.nexters.death.result.client;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "gemini", name = "enabled", havingValue = "true")
 class GeminiWarningMessageClient implements WarningMessageClient {
 
@@ -31,15 +33,11 @@ class GeminiWarningMessageClient implements WarningMessageClient {
 
     private final GeminiTextGenerator generator;
 
-    GeminiWarningMessageClient(GeminiTextGenerator generator) {
-        this.generator = generator;
-    }
-
     @Override
     public String generateWarningMessage(WarningMessageRequest request) {
         try {
             String generated = generator.generate(buildPrompt(request));
-            int length = generated == null ? 0 : generated.strip().length();
+            int length = generated == null ? 0 : characterCount(generated.strip());
             log.debug("Gemini 응답 원문({}자): {}", length, generated);
             return normalize(generated);
         } catch (Exception e) {
@@ -63,10 +61,16 @@ class GeminiWarningMessageClient implements WarningMessageClient {
             return FALLBACK_MESSAGE;
         }
         String trimmed = generated.strip();
-        if (trimmed.length() > MAX_LENGTH) {
-            log.warn("Gemini 경고 메시지가 {}자를 초과({}자)해 기본 문구로 대체: {}", MAX_LENGTH, trimmed.length(), trimmed);
+        int length = characterCount(trimmed);
+        if (length > MAX_LENGTH) {
+            log.warn("Gemini 경고 메시지가 {}자를 초과({}자)해 기본 문구로 대체: {}", MAX_LENGTH, length, trimmed);
             return FALLBACK_MESSAGE;
         }
         return trimmed;
+    }
+
+    // 이모지 등 비-BMP 문자를 2로 세지 않도록 코드포인트 기준으로 글자수를 센다.
+    private int characterCount(String text) {
+        return text.codePointCount(0, text.length());
     }
 }
