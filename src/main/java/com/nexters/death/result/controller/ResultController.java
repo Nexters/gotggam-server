@@ -26,12 +26,14 @@ public class ResultController {
     @Operation(summary = "설문 결과 제출", description = "설문 답변을 받아 결과를 계산, 저장하고 결과 페이지 정보를 반환한다.")
     @PostMapping
     public ApiResponse<SurveyResultResponse> createResult(@Valid @RequestBody SurveyResultRequest request) {
-        return ApiResponse.success(resultService.createResult(request));
+        SurveyResultResponse response = resultService.createResult(request);
+        return ApiResponse.success(response);
     }
 
     @Operation(summary = "총 참여자 수 조회", description = "총 참여자 수(지금까지 설문에 참여해 생성된 결과 수)를 반환합니다.")
     @GetMapping("/count")
     public ApiResponse<ResultCountResponse> getParticipantCount() {
-        return ApiResponse.success(resultService.countParticipants());
+        ResultCountResponse response = resultService.countParticipants();
+        return ApiResponse.success(response);
     }
 }
