@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "\uD83E\uDEA6 Result API", description = "설문 결과 API")
 @RestController
-@RequestMapping("/api/results")
+@RequestMapping("/api/v1/results")
 @RequiredArgsConstructor
 public class ResultController {
 
