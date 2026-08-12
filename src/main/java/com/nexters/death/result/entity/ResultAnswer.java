@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -51,7 +52,8 @@ public class ResultAnswer {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public ResultAnswer(Result result, Question question, QuestionOption option) {
+    @Builder
+    private ResultAnswer(Result result, Question question, QuestionOption option) {
         this.result = result;
         this.question = question;
         this.option = option;

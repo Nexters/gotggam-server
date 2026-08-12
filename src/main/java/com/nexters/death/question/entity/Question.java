@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -44,7 +45,8 @@ public class Question extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private boolean active;
 
-    public Question(
+    @Builder
+    private Question(
         String code,
         Act act,
         String content,
