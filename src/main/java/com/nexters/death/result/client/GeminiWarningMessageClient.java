@@ -39,6 +39,8 @@ class GeminiWarningMessageClient implements WarningMessageClient {
     public String generateWarningMessage(WarningMessageRequest request) {
         try {
             String generated = generator.generate(buildPrompt(request));
+            int length = generated == null ? 0 : generated.strip().length();
+            log.debug("Gemini 응답 원문({}자): {}", length, generated);
             return normalize(generated);
         } catch (Exception e) {
             log.warn("Gemini 경고 메시지 생성 실패, 기본 문구로 대체", e);
