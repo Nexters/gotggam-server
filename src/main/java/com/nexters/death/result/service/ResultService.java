@@ -14,6 +14,7 @@ import com.nexters.death.result.dto.AnswerRequest;
 import com.nexters.death.result.dto.CategoryPenaltyResponse;
 import com.nexters.death.result.dto.CharacterRequest;
 import com.nexters.death.result.dto.CharacterResponse;
+import com.nexters.death.result.dto.ResultCountResponse;
 import com.nexters.death.result.dto.SurveyResultRequest;
 import com.nexters.death.result.dto.SurveyResultResponse;
 import com.nexters.death.result.entity.Gender;
@@ -108,6 +109,11 @@ public class ResultService {
             toCategoryPenaltyResponses(penaltyByCategory),
             toSpecialRuleDescriptions(selectedRules)
         );
+    }
+
+    public ResultCountResponse countParticipants() {
+        long totalParticipants = resultRepository.count();
+        return new ResultCountResponse(totalParticipants);
     }
 
     private List<AnsweredQuestion> resolveAnswers(List<AnswerRequest> answers) {

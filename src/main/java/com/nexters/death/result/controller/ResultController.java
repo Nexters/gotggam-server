@@ -1,6 +1,7 @@
 package com.nexters.death.result.controller;
 
 import com.nexters.death.global.payload.ApiResponse;
+import com.nexters.death.result.dto.ResultCountResponse;
 import com.nexters.death.result.dto.SurveyResultRequest;
 import com.nexters.death.result.dto.SurveyResultResponse;
 import com.nexters.death.result.service.ResultService;
@@ -8,12 +9,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "\uD83E\uDEA6 Result API", description = "설문 결과 API")
+@Tag(name = "🪦 Result API", description = "설문 결과 API")
 @RestController
 @RequestMapping("/api/v1/results")
 @RequiredArgsConstructor
@@ -25,5 +27,11 @@ public class ResultController {
     @PostMapping
     public ApiResponse<SurveyResultResponse> createResult(@Valid @RequestBody SurveyResultRequest request) {
         return ApiResponse.success(resultService.createResult(request));
+    }
+
+    @Operation(summary = "총 참여자 수 조회", description = "총 참여자 수(지금까지 설문에 참여해 생성된 결과 수)를 반환합니다.")
+    @GetMapping("/count")
+    public ApiResponse<ResultCountResponse> getParticipantCount() {
+        return ApiResponse.success(resultService.countParticipants());
     }
 }

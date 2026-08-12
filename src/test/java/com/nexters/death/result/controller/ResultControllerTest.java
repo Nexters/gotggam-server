@@ -144,7 +144,7 @@ class ResultControllerTest {
 
         int expectedLife = expectedLife("80.00", "14.00", "20.00");
 
-        mockMvc.perform(post("/api/results")
+        mockMvc.perform(post("/api/v1/results")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -192,7 +192,7 @@ class ResultControllerTest {
             new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
         );
 
-        mockMvc.perform(post("/api/results")
+        mockMvc.perform(post("/api/v1/results")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -219,7 +219,7 @@ class ResultControllerTest {
             new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
         );
 
-        mockMvc.perform(post("/api/results")
+        mockMvc.perform(post("/api/v1/results")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -242,7 +242,7 @@ class ResultControllerTest {
             new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
         );
 
-        mockMvc.perform(post("/api/results")
+        mockMvc.perform(post("/api/v1/results")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -261,7 +261,7 @@ class ResultControllerTest {
             new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
         );
 
-        mockMvc.perform(post("/api/results")
+        mockMvc.perform(post("/api/v1/results")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -285,7 +285,7 @@ class ResultControllerTest {
             new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
         );
 
-        mockMvc.perform(post("/api/results")
+        mockMvc.perform(post("/api/v1/results")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
