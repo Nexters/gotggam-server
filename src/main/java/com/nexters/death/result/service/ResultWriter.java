@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 // 외부 API(Gemini) 호출은 ResultService에서 이 write 호출 전에 끝나므로, DB 커넥션을 잡은 채 외부 응답을 기다리지 않는다.
 @Service
 @RequiredArgsConstructor
-class ResultWriter {
+public class ResultWriter {
 
     private final ResultRepository resultRepository;
     private final ResultAnswerRepository resultAnswerRepository;
@@ -28,7 +28,7 @@ class ResultWriter {
     private final ResultSpecialRuleRepository resultSpecialRuleRepository;
 
     @Transactional
-    PersistedResult write(
+    public PersistedResult write(
         Result result,
         List<AnsweredQuestion> answeredQuestions,
         CharacterRequest character,
@@ -74,6 +74,6 @@ class ResultWriter {
         resultSpecialRuleRepository.saveAll(resultSpecialRules);
     }
 
-    record PersistedResult(Result result, ResultCharacter character) {
+    public record PersistedResult(Result result, ResultCharacter character) {
     }
 }
