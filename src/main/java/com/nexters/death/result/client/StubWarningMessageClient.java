@@ -1,12 +1,14 @@
 package com.nexters.death.result.client;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-// Gemini 연동 전까지 고정 문구를 반환하는 스텁. 실제 연동 시 같은 인터페이스 구현체로 교체한다.
+// gemini.enabled=false(기본/테스트)일 때만 활성화. Gemini 구현체와 배타적으로 정확히 하나만 뜬다.
 @Component
+@ConditionalOnProperty(prefix = "gemini", name = "enabled", havingValue = "false", matchIfMissing = true)
 public class StubWarningMessageClient implements WarningMessageClient {
 
-    private static final String STUB_MESSAGE = "지금처럼 살면 예정된 날짜에 도착하게 됩니다. 오늘의 선택이 내일을 바꿉니다.";
+    private static final String STUB_MESSAGE = "이대로면 오래 못 산다냥.";
 
     @Override
     public String generateWarningMessage(WarningMessageRequest request) {

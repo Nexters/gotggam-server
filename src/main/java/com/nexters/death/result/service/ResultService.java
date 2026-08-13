@@ -4,7 +4,6 @@ import com.nexters.death.global.exception.BusinessException;
 import com.nexters.death.policy.entity.LifeExpectancyPolicy;
 import com.nexters.death.policy.service.LifeExpectancyPolicyService;
 import com.nexters.death.question.entity.Category;
-import com.nexters.death.question.entity.Question;
 import com.nexters.death.question.entity.QuestionOption;
 import com.nexters.death.question.entity.SpecialRule;
 import com.nexters.death.question.service.QuestionService;
@@ -12,21 +11,14 @@ import com.nexters.death.result.client.WarningMessageClient;
 import com.nexters.death.result.client.WarningMessageRequest;
 import com.nexters.death.result.dto.AnswerRequest;
 import com.nexters.death.result.dto.CategoryPenaltyResponse;
-import com.nexters.death.result.dto.CharacterRequest;
 import com.nexters.death.result.dto.CharacterResponse;
 import com.nexters.death.result.dto.ResultCountResponse;
 import com.nexters.death.result.dto.SurveyResultRequest;
 import com.nexters.death.result.dto.SurveyResultResponse;
 import com.nexters.death.result.entity.Gender;
 import com.nexters.death.result.entity.Result;
-import com.nexters.death.result.entity.ResultAnswer;
-import com.nexters.death.result.entity.ResultCharacter;
-import com.nexters.death.result.entity.ResultSpecialRule;
 import com.nexters.death.result.exception.ResultErrorCode;
-import com.nexters.death.result.repository.ResultAnswerRepository;
-import com.nexters.death.result.repository.ResultCharacterRepository;
 import com.nexters.death.result.repository.ResultRepository;
-import com.nexters.death.result.repository.ResultSpecialRuleRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -36,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,12 +43,10 @@ public class ResultService {
     private final QuestionService questionService;
     private final LifeExpectancyPolicyService lifeExpectancyPolicyService;
     private final WarningMessageClient warningMessageClient;
+    private final ResultWriter resultWriter;
     private final ResultRepository resultRepository;
-    private final ResultAnswerRepository resultAnswerRepository;
-    private final ResultCharacterRepository resultCharacterRepository;
-    private final ResultSpecialRuleRepository resultSpecialRuleRepository;
 
-    @Transactional
+    // 조회와 계산, 외부 API(Gemini) 호출은 트랜잭션 밖에서 수행하고, 실제 저장만 ResultWriter의 트랜잭션에 위임한다.
     public SurveyResultResponse createResult(SurveyResultRequest request) {
         List<AnsweredQuestion> answeredQuestions = resolveAnswers(request.answers());
 
@@ -80,7 +69,7 @@ public class ResultService {
         String todayMessage = resolveTodayMessage(request.todayMessage());
         List<SpecialRule> selectedRules = selectSpecialRules(answeredQuestions);
 
-        Result result = resultRepository.save(Result.builder()
+        Result result = Result.builder()
             .name(request.name())
             .birthDate(request.birthDate())
             .gender(request.gender())
@@ -91,26 +80,27 @@ public class ResultService {
             .expectedLife(expectedLife)
             .todayMessage(todayMessage)
             .warningMessage(warningMessage)
-            .build());
-        saveAnswers(result, answeredQuestions);
-        ResultCharacter character = saveCharacter(result, request.character());
-        saveSpecialRules(result, selectedRules);
+            .build();
+        ResultWriter.PersistedResult persisted =
+            resultWriter.write(result, answeredQuestions, request.character(), selectedRules);
+        Result savedResult = persisted.result();
 
         return new SurveyResultResponse(
-            result.getId(),
-            result.getShareToken(),
-            result.getName(),
-            result.getBirthDate(),
-            result.getGender(),
-            toDisplayYears(result.getExpectedLife()),
-            result.getTodayMessage(),
-            result.getWarningMessage(),
-            CharacterResponse.from(character),
+            savedResult.getId(),
+            savedResult.getShareToken(),
+            savedResult.getName(),
+            savedResult.getBirthDate(),
+            savedResult.getGender(),
+            toDisplayYears(savedResult.getExpectedLife()),
+            savedResult.getTodayMessage(),
+            savedResult.getWarningMessage(),
+            CharacterResponse.from(persisted.character()),
             toCategoryPenaltyResponses(penaltyByCategory),
             toSpecialRuleDescriptions(selectedRules)
         );
     }
 
+    @Transactional(readOnly = true)
     public ResultCountResponse countParticipants() {
         long totalParticipants = resultRepository.count();
         return new ResultCountResponse(totalParticipants);
@@ -200,39 +190,6 @@ public class ResultService {
             .toList();
     }
 
-    private void saveAnswers(Result result, List<AnsweredQuestion> answeredQuestions) {
-        List<ResultAnswer> resultAnswers = answeredQuestions.stream()
-            .map(answeredQuestion -> ResultAnswer.builder()
-                .result(result)
-                .question(answeredQuestion.question())
-                .option(answeredQuestion.option())
-                .build())
-            .toList();
-        resultAnswerRepository.saveAll(resultAnswers);
-    }
-
-    private ResultCharacter saveCharacter(Result result, CharacterRequest request) {
-        return resultCharacterRepository.save(ResultCharacter.builder()
-            .result(result)
-            .faceType(request.faceType())
-            .hairType(request.hairType())
-            .eyeType(request.eyeType())
-            .noseType(request.noseType())
-            .mouthType(request.mouthType())
-            .build());
-    }
-
-    private void saveSpecialRules(Result result, List<SpecialRule> selectedRules) {
-        List<ResultSpecialRule> resultSpecialRules = IntStream.range(0, selectedRules.size())
-            .mapToObj(index -> ResultSpecialRule.builder()
-                .result(result)
-                .specialRule(selectedRules.get(index))
-                .displayOrder((short) (index + 1))
-                .build())
-            .toList();
-        resultSpecialRuleRepository.saveAll(resultSpecialRules);
-    }
-
     private List<CategoryPenaltyResponse> toCategoryPenaltyResponses(Map<Category, BigDecimal> penaltyByCategory) {
         return penaltyByCategory.entrySet().stream()
             .sorted(Comparator.comparing(entry -> CategoryPillar.from(entry.getKey().getCategoryKey())))
@@ -252,8 +209,5 @@ public class ResultService {
             return List.of(DEFAULT_SPECIAL_RULE);
         }
         return selectedRules.stream().map(SpecialRule::getDescription).toList();
-    }
-
-    private record AnsweredQuestion(Question question, QuestionOption option) {
     }
 }
