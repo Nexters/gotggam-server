@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 public enum PolicyErrorCode implements BaseError {
 
     LIFE_EXPECTANCY_POLICY_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "POLICY_001", "수명 정책이 설정되지 않았습니다."),
+    AGE_WEIGHT_NOT_CONFIGURED(HttpStatus.INTERNAL_SERVER_ERROR, "POLICY_002", "나이대별 가중치가 설정되지 않았습니다."),
     ;
 
     private final HttpStatus httpStatus;
