@@ -30,6 +30,7 @@ jobs:
         run: |
           umask 077
           cat > .env <<EOF
+          SPRING_PROFILES_ACTIVE=dev
           POSTGRES_DB=$POSTGRES_DB
           POSTGRES_USER=$POSTGRES_USER
           POSTGRES_PASSWORD=$POSTGRES_PASSWORD
