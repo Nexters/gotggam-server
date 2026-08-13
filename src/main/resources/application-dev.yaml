@@ -1,0 +1,31 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://db:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 3000
+      keepalive-time: 30000
+      validation-timeout: 1000
+      max-lifetime: 600000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - https://death-client-nine.vercel.app
+      - https://gotggam.com # 운영 배포 전까지 임시
+  swagger:
+    server-url: ${SWAGGER_SERVER_URL:https://dev-api.gotggam.com}
