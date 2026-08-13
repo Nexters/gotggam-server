@@ -16,4 +16,6 @@ public interface QuestionOptionRepository extends JpaRepository<QuestionOption, 
         where qo.id in :ids
         """)
     List<QuestionOption> findAllWithQuestionByIdIn(@Param("ids") Collection<Long> ids);
+
+    List<QuestionOption> findAllByQuestionIdInOrderByPositiveDescIdAsc(Collection<Long> questionIds);
 }
