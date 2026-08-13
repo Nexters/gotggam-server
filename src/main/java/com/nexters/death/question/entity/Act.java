@@ -22,16 +22,20 @@ public class Act extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "act_key", nullable = false, unique = true, length = 30)
-    private String actKey;
+    @Column(nullable = false, unique = true, length = 30)
+    private String code;
 
     @Column(nullable = false, length = 30)
     private String label;
 
+    @Column(name = "display_order", nullable = false, unique = true)
+    private Integer displayOrder;
+
     @Builder
-    private Act(String actKey, String label) {
-        this.actKey = actKey;
+    private Act(String code, String label, Integer displayOrder) {
+        this.code = code;
         this.label = label;
+        this.displayOrder = displayOrder;
     }
 
 }
