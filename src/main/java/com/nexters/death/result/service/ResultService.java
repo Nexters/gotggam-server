@@ -1,7 +1,9 @@
 package com.nexters.death.result.service;
 
 import com.nexters.death.global.exception.BusinessException;
+import com.nexters.death.policy.entity.AgeWeight;
 import com.nexters.death.policy.entity.LifeExpectancyPolicy;
+import com.nexters.death.policy.service.AgeWeightService;
 import com.nexters.death.policy.service.LifeExpectancyPolicyService;
 import com.nexters.death.question.entity.Category;
 import com.nexters.death.question.entity.QuestionOption;
@@ -21,6 +23,9 @@ import com.nexters.death.result.exception.ResultErrorCode;
 import com.nexters.death.result.repository.ResultRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -39,30 +44,34 @@ public class ResultService {
     private static final String DEFAULT_TODAY_MESSAGE = "오늘도 무사한 하루 되세요";
     private static final String DEFAULT_SPECIAL_RULE = "지금처럼만 지내세요. 특별히 고칠 점은 없습니다.";
     private static final int MAX_SPECIAL_RULES = 3;
+    private static final BigDecimal FLOOR_YEARS_ABOVE_INPUT_AGE = BigDecimal.valueOf(5);
 
     private final QuestionService questionService;
     private final LifeExpectancyPolicyService lifeExpectancyPolicyService;
+    private final AgeWeightService ageWeightService;
     private final WarningMessageClient warningMessageClient;
     private final ResultWriter resultWriter;
     private final ResultRepository resultRepository;
+    private final Clock clock;
 
     // 조회와 계산, 외부 API(Gemini) 호출은 트랜잭션 밖에서 수행하고, 실제 저장만 ResultWriter의 트랜잭션에 위임한다.
     public SurveyResultResponse createResult(SurveyResultRequest request) {
         List<AnsweredQuestion> answeredQuestions = resolveAnswers(request.answers());
 
+        int inputAge = ageOf(request.birthDate());
+        AgeWeight weights = ageWeightService.getWeightsForAge(inputAge);
         Map<Category, BigDecimal> penaltyByCategory = sumPenaltyByCategory(answeredQuestions);
         Map<CategoryPillar, BigDecimal> penaltyByPillar = sumPenaltyByPillar(penaltyByCategory);
-        BigDecimal bodyPenalty = penaltyByPillar.getOrDefault(CategoryPillar.BODY, BigDecimal.ZERO);
-        BigDecimal mindPenalty = penaltyByPillar.getOrDefault(CategoryPillar.MIND, BigDecimal.ZERO);
-        BigDecimal attitudePenalty = penaltyByPillar.getOrDefault(CategoryPillar.ATTITUDE, BigDecimal.ZERO);
+        BigDecimal bodyPenalty = applyWeight(penaltyByPillar, CategoryPillar.BODY, weights.getBodyWeight());
+        BigDecimal mindPenalty = applyWeight(penaltyByPillar, CategoryPillar.MIND, weights.getMindWeight());
+        BigDecimal attitudePenalty = applyWeight(penaltyByPillar, CategoryPillar.ATTITUDE, weights.getAttitudeWeight());
 
         LifeExpectancyPolicy policy = lifeExpectancyPolicyService.getPolicy();
         BigDecimal baseLife = request.gender() == Gender.MALE
             ? policy.getMaleExpectancy()
             : policy.getFemaleExpectancy();
         BigDecimal totalPenalty = bodyPenalty.add(mindPenalty).add(attitudePenalty);
-        BigDecimal expectedLife = calculateExpectedLife(
-            baseLife, totalPenalty, policy.getMinRemainingLife());
+        BigDecimal expectedLife = calculateExpectedLife(baseLife, totalPenalty, inputAge);
 
         String warningMessage = warningMessageClient.generateWarningMessage(
             new WarningMessageRequest(request.name(), bodyPenalty, mindPenalty, attitudePenalty));
@@ -95,7 +104,7 @@ public class ResultService {
             savedResult.getTodayMessage(),
             savedResult.getWarningMessage(),
             CharacterResponse.from(persisted.character()),
-            toCategoryPenaltyResponses(penaltyByCategory),
+            toCategoryPenaltyResponses(penaltyByCategory, weights),
             toSpecialRuleDescriptions(selectedRules)
         );
     }
@@ -133,6 +142,28 @@ public class ResultService {
             .toList();
     }
 
+    private int ageOf(LocalDate birthDate) {
+        return Period.between(birthDate, LocalDate.now(clock)).getYears();
+    }
+
+    // 카테고리(pillar) 원본 페널티 합에 나이대별 가중치를 곱해 실제 차감량을 구한다.
+    private BigDecimal applyWeight(
+        Map<CategoryPillar, BigDecimal> penaltyByPillar,
+        CategoryPillar pillar,
+        BigDecimal weight
+    ) {
+        BigDecimal rawPenalty = penaltyByPillar.getOrDefault(pillar, BigDecimal.ZERO);
+        return rawPenalty.multiply(weight).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal weightOf(AgeWeight weights, CategoryPillar pillar) {
+        return switch (pillar) {
+            case BODY -> weights.getBodyWeight();
+            case MIND -> weights.getMindWeight();
+            case ATTITUDE -> weights.getAttitudeWeight();
+        };
+    }
+
     private Map<Category, BigDecimal> sumPenaltyByCategory(List<AnsweredQuestion> answeredQuestions) {
         return answeredQuestions.stream()
             .collect(Collectors.groupingBy(
@@ -154,9 +185,14 @@ public class ResultService {
     private BigDecimal calculateExpectedLife(
         BigDecimal baseLife,
         BigDecimal totalPenalty,
-        BigDecimal minRemainingLife
+        int inputAge
     ) {
-        return baseLife.subtract(totalPenalty).max(minRemainingLife);
+        BigDecimal expectedLife = baseLife.subtract(totalPenalty);
+        BigDecimal inputAgeYears = BigDecimal.valueOf(inputAge);
+        if (expectedLife.compareTo(inputAgeYears) <= 0) {
+            return inputAgeYears.add(FLOOR_YEARS_ABOVE_INPUT_AGE);
+        }
+        return expectedLife;
     }
 
     private String resolveTodayMessage(String todayMessage) {
@@ -190,13 +226,20 @@ public class ResultService {
             .toList();
     }
 
-    private List<CategoryPenaltyResponse> toCategoryPenaltyResponses(Map<Category, BigDecimal> penaltyByCategory) {
+    private List<CategoryPenaltyResponse> toCategoryPenaltyResponses(
+        Map<Category, BigDecimal> penaltyByCategory,
+        AgeWeight weights
+    ) {
         return penaltyByCategory.entrySet().stream()
             .sorted(Comparator.comparing(entry -> CategoryPillar.from(entry.getKey().getCategoryKey())))
-            .map(entry -> new CategoryPenaltyResponse(
-                entry.getKey().getId(),
-                entry.getKey().getName(),
-                toDisplayYears(entry.getValue())))
+            .map(entry -> {
+                CategoryPillar pillar = CategoryPillar.from(entry.getKey().getCategoryKey());
+                BigDecimal weightedPenalty = entry.getValue().multiply(weightOf(weights, pillar));
+                return new CategoryPenaltyResponse(
+                    entry.getKey().getId(),
+                    entry.getKey().getName(),
+                    toDisplayYears(weightedPenalty));
+            })
             .toList();
     }
 
