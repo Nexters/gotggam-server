@@ -102,7 +102,7 @@ class ResultControllerTest {
         Category body = persist(Category.builder().categoryKey("BODY").name("몸").build());
         Category mind = persist(Category.builder().categoryKey("MIND").name("마음").build());
         Category attitude = persist(Category.builder().categoryKey("ATTITUDE").name("삶·태도").build());
-        Act act = persist(Act.builder().actKey("morning").label("아침").build());
+        Act act = persist(Act.builder().code("morning").label("아침").displayOrder(1).build());
 
         Question question1 = persist(question("q1", act, body, 1));
         Question question2 = persist(question("q2", act, mind, 2));
