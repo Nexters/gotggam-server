@@ -234,7 +234,10 @@ public class ResultService {
             .sorted(Comparator.comparing(entry -> CategoryPillar.from(entry.getKey().getCategoryKey())))
             .map(entry -> {
                 CategoryPillar pillar = CategoryPillar.from(entry.getKey().getCategoryKey());
-                BigDecimal weightedPenalty = entry.getValue().multiply(weightOf(weights, pillar));
+                // 실제 수명 차감(applyWeight)과 동일하게 2자리 반올림한 뒤 정수 변환해, 표시 합과 반영된 감점이 어긋나지 않게 한다.
+                BigDecimal weightedPenalty = entry.getValue()
+                    .multiply(weightOf(weights, pillar))
+                    .setScale(2, RoundingMode.HALF_UP);
                 return new CategoryPenaltyResponse(
                     entry.getKey().getId(),
                     entry.getKey().getName(),
