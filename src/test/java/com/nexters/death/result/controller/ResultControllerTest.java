@@ -29,6 +29,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -250,6 +251,25 @@ class ResultControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.expectedLife").value(91));
+    }
+
+    @Test
+    @DisplayName("answers에 null 원소가 있으면 400과 입력값 검증 에러코드를 반환한다")
+    void createResult_nullAnswerElement() throws Exception {
+        SurveyResultRequest request = new SurveyResultRequest(
+            "김철수",
+            LocalDate.of(1990, 6, 15),
+            Gender.MALE,
+            null,
+            Collections.singletonList(null),
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+        );
+
+        mockMvc.perform(post("/api/v1/results")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error.code").value("COMMON_004"));
     }
 
     @Test

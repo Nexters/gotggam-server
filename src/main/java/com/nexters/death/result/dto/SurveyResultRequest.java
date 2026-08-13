@@ -26,7 +26,7 @@ public record SurveyResultRequest(
     @Size(min = 10, max = 15) String todayMessage,
 
     @Schema(description = "문항별 답변 목록")
-    @NotEmpty @Valid List<AnswerRequest> answers,
+    @NotEmpty List<@NotNull @Valid AnswerRequest> answers,
 
     @Schema(description = "캐릭터 얼굴 선택")
     @NotNull @Valid CharacterRequest character
