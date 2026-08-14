@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
-        @Schema(example = "200") int status,
-        @Nullable T data,
-        @Nullable @Schema(hidden = true) ErrorResponse error,
-        LocalDateTime timestamp
+        @Schema(example = "200", requiredMode = Schema.RequiredMode.REQUIRED) int status,
+        @Nullable @Schema(requiredMode = Schema.RequiredMode.REQUIRED) T data,
+        @Nullable @Schema(hidden = true, requiredMode = Schema.RequiredMode.REQUIRED) ErrorResponse error,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) LocalDateTime timestamp
 ) {
     public static <T> ApiResponse<T> success(@Nullable T data) {
         return new ApiResponse<>(HttpStatus.OK.value(), data, null, LocalDateTime.now());

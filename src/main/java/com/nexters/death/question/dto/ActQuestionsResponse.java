@@ -5,10 +5,10 @@ import java.util.List;
 
 public record ActQuestionsResponse(
 
-    @Schema(description = "act 정보")
+    @Schema(description = "act 정보", requiredMode = Schema.RequiredMode.REQUIRED)
     ActResponse act,
 
-    @Schema(description = "해당 act에 속한 문항 목록")
+    @Schema(description = "해당 act에 속한 문항 목록", requiredMode = Schema.RequiredMode.REQUIRED)
     List<QuestionResponse> questions
 ) {
 }
