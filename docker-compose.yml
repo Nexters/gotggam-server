@@ -18,6 +18,8 @@ services:
 
   db:
     image: postgres:18
+    ports:
+      - "${DB_BIND_ADDR:-127.0.0.1}:5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
