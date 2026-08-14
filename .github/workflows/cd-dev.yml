@@ -27,7 +27,6 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          DB_BIND_ADDR: ${{ vars.DB_BIND_ADDR }}
         run: |
           umask 077
           cat > .env <<EOF
@@ -35,7 +34,6 @@ jobs:
           POSTGRES_DB=$POSTGRES_DB
           POSTGRES_USER=$POSTGRES_USER
           POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-          DB_BIND_ADDR=$DB_BIND_ADDR
           EOF
 
       - name: Deploy
