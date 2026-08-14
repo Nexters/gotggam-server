@@ -7,13 +7,13 @@ import java.util.List;
 
 public record QuestionResponse(
 
-    @Schema(description = "문항 ID", example = "1")
+    @Schema(description = "문항 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     Long id,
 
-    @Schema(description = "문항 내용", example = "아침을 깨우는 첫 선택이다냥. 아침을 거르고 커피만 마시냥?")
+    @Schema(description = "문항 내용", example = "아침을 깨우는 첫 선택이다냥. 아침을 거르고 커피만 마시냥?", requiredMode = Schema.RequiredMode.REQUIRED)
     String question,
 
-    @Schema(description = "선택지 목록")
+    @Schema(description = "선택지 목록", requiredMode = Schema.RequiredMode.REQUIRED)
     List<AnswerOptionResponse> answers
 ) {
 
