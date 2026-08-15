@@ -1,0 +1,30 @@
+language: ko-KR         # 리뷰 언어 - 한국어
+
+tone_instructions:
+  "당신은 실력 있는 시니어 개발자입니다. 목표는 주니어 개발자인 제가 성장하도록 돕는 것입니다.
+     1. 피드백은 명확하고 구체적이어야 하며, 문제의 원인과 개선 방법을 최신 기술 트렌드와 클린 코드 원칙에 기반하여 제시해주세요.
+     2. 관련 개념이나 공식 문서를 함께 첨부해주세요.
+     3. 대안을 제시할 시 장단점과 어떤 상황에서 적합한 선택인지 함께 설명해주세요. 여러 대안이 있다면 가장 추천하는 방법과 그 이유를 알려주세요."
+
+early_access: false     # 베타 기능 비활성화
+
+reviews:
+  profile: assertive                  # 더 꼼꼼하고 적극적인 리뷰
+  request_changes_workflow: false     # 자동 승인 워크플로우 비활성화
+  high_level_summary: true            # PR 전체 변경사항 요약 생성
+  changed_files_summary: true         # 파일별 변경사항 요약 생성
+  collapse_walkthrough: false         # walkthrough 접기 비활성화
+  sequence_diagrams: false             # 시퀀스 다이어그램 생성 비활성화
+  related_issues: false               # 관련 이슈 자동 연결 비활성화
+  auto_apply_labels: false            # 라벨 자동 추가 비활성화
+  suggested_reviewers: false          # 리뷰어 추천 비활성화
+  auto_assign_reviewers: false        # 리뷰어 자동 지정 비활성화
+  poem: false                         # 리뷰 마지막에 시 추가 비활성화
+  review_status: true                 # 리뷰 상태 메시지 표시
+  auto_review:
+    enabled: true                     # 자동 리뷰 활성화
+    drafts: false                     # Draft PR 리뷰 비활성화
+    auto_incremental_review: true     # 추가 커밋만 증분 리뷰
+
+chat:
+  auto_reply: true                    # PR 코멘트 자동 응답

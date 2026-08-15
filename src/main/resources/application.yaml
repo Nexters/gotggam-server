@@ -1,3 +1,15 @@
 spring:
   application:
     name: death
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+gemini:
+  enabled: ${GEMINI_ENABLED}
+  api-key: ${GEMINI_API_KEY}
+  model: ${GEMINI_MODEL}
+  timeout: ${GEMINI_TIMEOUT}
