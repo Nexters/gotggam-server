@@ -27,3 +27,8 @@ app:
       - https://gotggam.com
   swagger:
     server-url: ${SWAGGER_SERVER_URL:https://api.gotggam.com}
+
+logging:
+  level:
+    root: warn
+    com.nexters.death: info
