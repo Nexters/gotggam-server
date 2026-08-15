@@ -23,7 +23,7 @@ public record SurveyResultRequest(
     @NotNull Gender gender,
 
     @Schema(description = "오늘의 한마디 (선택, 미입력 시 기본 문장 제공)", example = "오늘도 무사한 하루 되세요")
-    @Size(min = 10, max = 15) String todayMessage,
+    @Size(max = 15) String todayMessage,
 
     @Schema(description = "문항별 답변 목록")
     @NotEmpty List<@NotNull @Valid AnswerRequest> answers,
