@@ -1,0 +1,50 @@
+name: CD (prod)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, prod]
+    environment: prod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Write .env
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+        run: |
+          umask 077
+          cat > .env <<EOF
+          SPRING_PROFILES_ACTIVE=prod
+          POSTGRES_DB=$POSTGRES_DB
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          GEMINI_ENABLED=true
+          GEMINI_API_KEY=$GEMINI_API_KEY
+          GEMINI_MODEL=$GEMINI_MODEL
+          GEMINI_TIMEOUT=5s
+          EOF
+
+      - name: Deploy
+        run: docker compose up -d --build
+
+      - name: Prune dangling images
+        if: always()
+        run: docker image prune -f
