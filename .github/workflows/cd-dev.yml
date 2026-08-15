@@ -29,6 +29,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+          DB_BIND_ADDR: ${{ secrets.DB_BIND_ADDR }}
         run: |
           umask 077
           cat > .env <<EOF
@@ -40,6 +41,7 @@ jobs:
           GEMINI_API_KEY=$GEMINI_API_KEY
           GEMINI_MODEL=$GEMINI_MODEL
           GEMINI_TIMEOUT=5s
+          DB_BIND_ADDR=$DB_BIND_ADDR
           EOF
 
       - name: Deploy
