@@ -30,3 +30,8 @@ app:
       - https://dev-api.gotggam.com # 같은 호스트의 Swagger에서 POST 테스트 시 Origin 검사를 통과시키기 위함
   swagger:
     server-url: ${SWAGGER_SERVER_URL:https://dev-api.gotggam.com}
+
+logging:
+  level:
+    root: info
+    com.nexters.death: debug

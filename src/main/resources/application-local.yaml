@@ -16,7 +16,7 @@ gemini:
   enabled: ${GEMINI_ENABLED:true}
   api-key: ${GEMINI_API_KEY:}
 
-# 로컬에서 Gemini 응답 원문과 글자수를 확인하기 위한 로그.
 logging:
   level:
-    com.nexters.death.result.client: debug
+    root: info
+    com.nexters.death: debug
