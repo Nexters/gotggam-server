@@ -29,7 +29,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
-          DB_BIND_ADDR: ${{ vars.DB_BIND_ADDR }}
+          DB_BIND_ADDR: ${{ secrets.DB_BIND_ADDR }}
         run: |
           umask 077
           cat > .env <<EOF
