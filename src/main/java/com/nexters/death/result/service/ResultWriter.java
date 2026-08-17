@@ -1,5 +1,7 @@
 package com.nexters.death.result.service;
 
+import com.nexters.death.consent.dto.ConsentRequest;
+import com.nexters.death.consent.service.ConsentService;
 import com.nexters.death.question.entity.SpecialRule;
 import com.nexters.death.result.dto.CharacterRequest;
 import com.nexters.death.result.entity.Result;
@@ -10,6 +12,7 @@ import com.nexters.death.result.repository.ResultAnswerRepository;
 import com.nexters.death.result.repository.ResultCharacterRepository;
 import com.nexters.death.result.repository.ResultRepository;
 import com.nexters.death.result.repository.ResultSpecialRuleRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -26,18 +29,22 @@ public class ResultWriter {
     private final ResultAnswerRepository resultAnswerRepository;
     private final ResultCharacterRepository resultCharacterRepository;
     private final ResultSpecialRuleRepository resultSpecialRuleRepository;
+    private final ConsentService consentService;
 
     @Transactional
     public PersistedResult write(
         Result result,
         List<AnsweredQuestion> answeredQuestions,
         CharacterRequest character,
-        List<SpecialRule> selectedRules
+        List<SpecialRule> selectedRules,
+        List<ConsentRequest> consents,
+        LocalDateTime consentedAt
     ) {
         Result savedResult = resultRepository.save(result);
         saveAnswers(savedResult, answeredQuestions);
         ResultCharacter savedCharacter = saveCharacter(savedResult, character);
         saveSpecialRules(savedResult, selectedRules);
+        consentService.recordConsents(savedResult, consents, consentedAt);
         return new PersistedResult(savedResult, savedCharacter);
     }
 

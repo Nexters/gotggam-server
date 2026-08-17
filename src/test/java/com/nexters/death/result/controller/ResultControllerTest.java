@@ -7,6 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nexters.death.TestcontainersConfiguration;
+import com.nexters.death.consent.dto.ConsentRequest;
+import com.nexters.death.consent.entity.ConsentType;
+import com.nexters.death.consent.repository.ConsentRepository;
 import com.nexters.death.policy.entity.AgeWeight;
 import com.nexters.death.policy.entity.LifeExpectancyPolicy;
 import com.nexters.death.question.entity.Act;
@@ -77,6 +80,9 @@ class ResultControllerTest {
     @Autowired
     private ResultSpecialRuleRepository resultSpecialRuleRepository;
 
+    @Autowired
+    private ConsentRepository consentRepository;
+
     private Long q1Id;
     private Long q2Id;
     private Long q3Id;
@@ -93,6 +99,7 @@ class ResultControllerTest {
     private String q1Rule;
     private String q2Rule;
     private String q3Rule;
+    private List<ConsentRequest> validConsents;
 
     @BeforeEach
     void seedFixtures() {
@@ -144,6 +151,12 @@ class ResultControllerTest {
         persist(ageWeight(50, 59, "1.00", "0.50", "0.50"));
         persist(ageWeight(60, 69, "0.50", "0.25", "0.25"));
         persist(ageWeight(70, 79, "0.04", "0.04", "0.04"));
+
+        validConsents = List.of(
+            new ConsentRequest(ConsentType.PRIVACY_POLICY, "1.0", true),
+            new ConsentRequest(ConsentType.TERMS_OF_SERVICE, "1.0", true)
+        );
+
         em.flush();
     }
 
@@ -162,7 +175,8 @@ class ResultControllerTest {
                 new AnswerRequest(q3Id, q3Negative),
                 new AnswerRequest(q4Id, q4Negative)
             ),
-            new CharacterRequest((short) 1, (short) 2, (short) 3, (short) 4, (short) 5)
+            new CharacterRequest((short) 1, (short) 2, (short) 3, (short) 4, (short) 5),
+            validConsents
         );
 
         // 36세(30~39 구간, body 1.75/mind 1.5/attitude 1.5): 몸 7.00×1.75=12.25, 마음 3.00×1.5=4.50,
@@ -198,6 +212,7 @@ class ResultControllerTest {
         assertThat(resultAnswerRepository.count()).isEqualTo(4);
         assertThat(resultCharacterRepository.count()).isEqualTo(1);
         assertThat(resultSpecialRuleRepository.count()).isEqualTo(3);
+        assertThat(consentRepository.count()).isEqualTo(2);
     }
 
     @Test
@@ -214,7 +229,8 @@ class ResultControllerTest {
                 new AnswerRequest(q3Id, q3Positive),
                 new AnswerRequest(q4Id, q4Positive)
             ),
-            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            validConsents
         );
 
         mockMvc.perform(post("/api/v1/results")
@@ -243,7 +259,8 @@ class ResultControllerTest {
                 new AnswerRequest(q3Id, q3Negative),
                 new AnswerRequest(q4Id, q4Negative)
             ),
-            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            validConsents
         );
 
         mockMvc.perform(post("/api/v1/results")
@@ -262,7 +279,8 @@ class ResultControllerTest {
             Gender.MALE,
             null,
             Collections.singletonList(null),
-            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            validConsents
         );
 
         mockMvc.perform(post("/api/v1/results")
@@ -285,7 +303,8 @@ class ResultControllerTest {
                 new AnswerRequest(q2Id, q2Negative),
                 new AnswerRequest(q3Id, q3Negative)
             ),
-            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            validConsents
         );
 
         mockMvc.perform(post("/api/v1/results")
@@ -304,7 +323,8 @@ class ResultControllerTest {
             Gender.MALE,
             null,
             List.of(new AnswerRequest(q1Id, q1Negative)),
-            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            validConsents
         );
 
         mockMvc.perform(post("/api/v1/results")
@@ -328,7 +348,8 @@ class ResultControllerTest {
                 new AnswerRequest(q3Id, q3Negative),
                 new AnswerRequest(q4Id, q4Negative)
             ),
-            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1)
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            validConsents
         );
 
         mockMvc.perform(post("/api/v1/results")
@@ -336,6 +357,59 @@ class ResultControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error.code").value("COMMON_004"));
+    }
+
+    @Test
+    @DisplayName("필수 동의 항목 중 하나라도 동의하지 않으면 400을 반환한다")
+    void createResult_consentNotAgreed() throws Exception {
+        SurveyResultRequest request = new SurveyResultRequest(
+            "김철수",
+            LocalDate.of(1990, 6, 15),
+            Gender.MALE,
+            null,
+            List.of(
+                new AnswerRequest(q1Id, q1Negative),
+                new AnswerRequest(q2Id, q2Negative),
+                new AnswerRequest(q3Id, q3Negative),
+                new AnswerRequest(q4Id, q4Negative)
+            ),
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            List.of(
+                new ConsentRequest(ConsentType.PRIVACY_POLICY, "1.0", false),
+                new ConsentRequest(ConsentType.TERMS_OF_SERVICE, "1.0", true)
+            )
+        );
+
+        mockMvc.perform(post("/api/v1/results")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error.code").value("CONSENT_001"));
+    }
+
+    @Test
+    @DisplayName("동의 항목 중 일부 유형이 누락되면 400을 반환한다")
+    void createResult_incompleteConsent() throws Exception {
+        SurveyResultRequest request = new SurveyResultRequest(
+            "김철수",
+            LocalDate.of(1990, 6, 15),
+            Gender.MALE,
+            null,
+            List.of(
+                new AnswerRequest(q1Id, q1Negative),
+                new AnswerRequest(q2Id, q2Negative),
+                new AnswerRequest(q3Id, q3Negative),
+                new AnswerRequest(q4Id, q4Negative)
+            ),
+            new CharacterRequest((short) 1, (short) 1, (short) 1, (short) 1, (short) 1),
+            List.of(new ConsentRequest(ConsentType.PRIVACY_POLICY, "1.0", true))
+        );
+
+        mockMvc.perform(post("/api/v1/results")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error.code").value("CONSENT_002"));
     }
 
     private <T> T persist(T entity) {
