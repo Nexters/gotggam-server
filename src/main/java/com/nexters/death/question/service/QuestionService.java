@@ -40,7 +40,7 @@ public class QuestionService {
 
         // 2. 문항별 선택지를 한 번에 조회해 문항 ID로 그룹핑
         Map<Long, List<QuestionOption>> optionsByQuestionId = questionOptionRepository
-            .findAllByQuestionIdInOrderByPositiveDescIdAsc(questionIds).stream()
+            .findAllByQuestionIdInOrderByPositiveAscIdAsc(questionIds).stream()
             .collect(Collectors.groupingBy(option -> option.getQuestion().getId()));
 
         // 3. 문항을 순서를 유지하며 act 단위로 그룹핑
