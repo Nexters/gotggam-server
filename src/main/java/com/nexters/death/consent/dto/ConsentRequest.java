@@ -14,7 +14,7 @@ public record ConsentRequest(
     @Schema(description = "동의 문서 버전", example = "v1.0.0")
     @NotBlank @Size(max = 20) String version,
 
-    @Schema(description = "동의 여부", example = "true")
+    @Schema(description = "동의 여부", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
     boolean agreed
 ) {
 }
