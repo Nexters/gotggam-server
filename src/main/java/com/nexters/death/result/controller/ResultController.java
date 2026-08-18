@@ -48,7 +48,11 @@ public class ResultController {
             "eyeType": 1,
             "noseType": 3,
             "mouthType": 2
-          }
+          },
+          "consents": [
+            { "type": "PRIVACY_POLICY", "version": "1.0", "agreed": true },
+            { "type": "TERMS_OF_SERVICE", "version": "1.0", "agreed": true }
+          ]
         }
         """;
 

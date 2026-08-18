@@ -1,5 +1,6 @@
 package com.nexters.death.result.service;
 
+import com.nexters.death.consent.service.ConsentService;
 import com.nexters.death.global.exception.BusinessException;
 import com.nexters.death.policy.entity.AgeWeight;
 import com.nexters.death.policy.entity.LifeExpectancyPolicy;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -49,6 +51,7 @@ public class ResultService {
     private final QuestionService questionService;
     private final LifeExpectancyPolicyService lifeExpectancyPolicyService;
     private final AgeWeightService ageWeightService;
+    private final ConsentService consentService;
     private final WarningMessageClient warningMessageClient;
     private final ResultWriter resultWriter;
     private final ResultRepository resultRepository;
@@ -56,8 +59,12 @@ public class ResultService {
 
     // 조회와 계산, 외부 API(Gemini) 호출은 트랜잭션 밖에서 수행하고, 실제 저장만 ResultWriter의 트랜잭션에 위임한다.
     public SurveyResultResponse createResult(SurveyResultRequest request) {
+        // 1. 동의 항목 검증 (fail-fast) - 이후 계산/외부 API 호출 전에 필수 동의 여부부터 확인한다.
+        consentService.validateAgreed(request.consents());
+        // 2. 답변 검증 및 문항/선택지 엔티티 조회
         List<AnsweredQuestion> answeredQuestions = resolveAnswers(request.answers());
 
+        // 3. 나이대별 가중치 조회 후, 카테고리(body/mind/attitude)별 페널티 합산 및 가중치 적용
         int inputAge = ageOf(request.birthDate());
         AgeWeight weights = ageWeightService.getWeightsForAge(inputAge);
         Map<Category, BigDecimal> penaltyByCategory = sumPenaltyByCategory(answeredQuestions);
@@ -66,6 +73,7 @@ public class ResultService {
         BigDecimal mindPenalty = applyWeight(penaltyByPillar, CategoryPillar.MIND, weights.getMindWeight());
         BigDecimal attitudePenalty = applyWeight(penaltyByPillar, CategoryPillar.ATTITUDE, weights.getAttitudeWeight());
 
+        // 4. 성별 기준 기대수명에서 총 페널티를 차감해 예상수명 계산
         LifeExpectancyPolicy policy = lifeExpectancyPolicyService.getPolicy();
         BigDecimal baseLife = request.gender() == Gender.MALE
             ? policy.getMaleExpectancy()
@@ -73,11 +81,14 @@ public class ResultService {
         BigDecimal totalPenalty = bodyPenalty.add(mindPenalty).add(attitudePenalty);
         BigDecimal expectedLife = calculateExpectedLife(baseLife, totalPenalty, inputAge);
 
+        // 5. 외부 API(Gemini) 호출로 경고 메시지 생성, 오늘의 한마디/특별준수사항 결정
         String warningMessage = warningMessageClient.generateWarningMessage(
             new WarningMessageRequest(request.name(), bodyPenalty, mindPenalty, attitudePenalty));
         String todayMessage = resolveTodayMessage(request.todayMessage());
         List<SpecialRule> selectedRules = selectSpecialRules(answeredQuestions);
+        LocalDateTime consentedAt = LocalDateTime.now(clock);
 
+        // 6. Result 엔티티 조립 후, 답변/캐릭터/특별준수사항/동의 기록을 한 트랜잭션으로 저장
         Result result = Result.builder()
             .name(request.name())
             .birthDate(request.birthDate())
@@ -90,10 +101,11 @@ public class ResultService {
             .todayMessage(todayMessage)
             .warningMessage(warningMessage)
             .build();
-        ResultWriter.PersistedResult persisted =
-            resultWriter.write(result, answeredQuestions, request.character(), selectedRules);
+        ResultWriter.PersistedResult persisted = resultWriter.write(
+            result, answeredQuestions, request.character(), selectedRules, request.consents(), consentedAt);
         Result savedResult = persisted.result();
 
+        // 7. 저장된 결과를 응답 DTO로 변환
         return new SurveyResultResponse(
             savedResult.getId(),
             savedResult.getShareToken(),
