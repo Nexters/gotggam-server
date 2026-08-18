@@ -83,7 +83,7 @@ public class ResultService {
 
         // 5. 외부 API(Gemini) 호출로 경고 메시지 생성, 오늘의 한마디/특별준수사항 결정
         String warningMessage = warningMessageClient.generateWarningMessage(
-            new WarningMessageRequest(request.name(), bodyPenalty, mindPenalty, attitudePenalty));
+            new WarningMessageRequest(bodyPenalty, mindPenalty, attitudePenalty));
         String todayMessage = resolveTodayMessage(request.todayMessage());
         List<SpecialRule> selectedRules = selectSpecialRules(answeredQuestions);
         LocalDateTime consentedAt = LocalDateTime.now(clock);
