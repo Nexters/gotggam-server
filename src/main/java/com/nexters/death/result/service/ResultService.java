@@ -74,7 +74,7 @@ public class ResultService {
         BigDecimal expectedLife = calculateExpectedLife(baseLife, totalPenalty, inputAge);
 
         String warningMessage = warningMessageClient.generateWarningMessage(
-            new WarningMessageRequest(request.name(), bodyPenalty, mindPenalty, attitudePenalty));
+            new WarningMessageRequest(bodyPenalty, mindPenalty, attitudePenalty));
         String todayMessage = resolveTodayMessage(request.todayMessage());
         List<SpecialRule> selectedRules = selectSpecialRules(answeredQuestions);
 

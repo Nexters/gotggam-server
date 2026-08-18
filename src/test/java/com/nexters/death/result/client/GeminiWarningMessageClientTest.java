@@ -25,7 +25,6 @@ class GeminiWarningMessageClientTest {
 
     private WarningMessageRequest request() {
         return new WarningMessageRequest(
-            "김철수",
             new BigDecimal("5.00"),
             new BigDecimal("3.00"),
             new BigDecimal("2.00")
