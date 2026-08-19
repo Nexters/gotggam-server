@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 애플리케이션 메트릭 (별도 관리 포트, 내부 네트워크에서만 접근)
+  - job_name: spring
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["app:8081"]
+
+  # 호스트 시스템 (CPU/RAM/디스크)
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # 컨테이너별 리소스 (CPU/메모리/스로틀링)
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["cadvisor:8080"]
+
+  # PostgreSQL
+  - job_name: postgres
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
