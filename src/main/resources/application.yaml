@@ -13,3 +13,18 @@ gemini:
   api-key: ${GEMINI_API_KEY}
   model: ${GEMINI_MODEL}
   timeout: ${GEMINI_TIMEOUT}
+
+# 메트릭 노출은 호스트에 공개하지 않는 별도 관리 포트(8081)로 분리하고, Prometheus가 내부 네트워크로만 스크랩한다.
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
