@@ -61,9 +61,9 @@ class QuestionControllerTest {
             .andExpect(jsonPath("$.data[0].questions.length()").value(1))
             .andExpect(jsonPath("$.data[0].questions[0].id").value(q1.getId()))
             .andExpect(jsonPath("$.data[0].questions[0].answers.length()").value(2))
-            .andExpect(jsonPath("$.data[0].questions[0].answers[0].answer").value("커피 수혈은 필수다."))
-            .andExpect(jsonPath("$.data[0].questions[0].answers[0].feedback").value("카페인 자판기냥?"))
-            .andExpect(jsonPath("$.data[0].questions[0].answers[1].answer").value("뭐라도 씹는다."))
+            .andExpect(jsonPath("$.data[0].questions[0].answers[0].answer").value("뭐라도 씹는다."))
+            .andExpect(jsonPath("$.data[0].questions[0].answers[0].feedback").value("제법이다냥."))
+            .andExpect(jsonPath("$.data[0].questions[0].answers[1].answer").value("커피 수혈은 필수다."))
             .andExpect(jsonPath("$.data[1].act.code").value("commute"))
             .andExpect(jsonPath("$.data[1].questions.length()").value(1))
             .andExpect(jsonPath("$.data[1].questions[0].id").value(q2.getId()));

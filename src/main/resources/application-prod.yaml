@@ -21,6 +21,12 @@ spring:
       hibernate:
         format_sql: false
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 app:
   cors:
     allowed-origins:

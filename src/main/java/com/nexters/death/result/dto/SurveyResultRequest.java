@@ -1,5 +1,6 @@
 package com.nexters.death.result.dto;
 
+import com.nexters.death.consent.dto.ConsentRequest;
 import com.nexters.death.result.entity.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -29,6 +30,9 @@ public record SurveyResultRequest(
     @NotEmpty List<@NotNull @Valid AnswerRequest> answers,
 
     @Schema(description = "캐릭터 얼굴 선택")
-    @NotNull @Valid CharacterRequest character
+    @NotNull @Valid CharacterRequest character,
+
+    @Schema(description = "동의 항목 목록")
+    @NotEmpty List<@NotNull @Valid ConsentRequest> consents
 ) {
 }
