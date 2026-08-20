@@ -30,6 +30,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
           GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+          GF_SLACK_WEBHOOK_URL: ${{ secrets.GF_SLACK_WEBHOOK_URL }}
         run: |
           umask 077
           cat > .env <<EOF
@@ -43,6 +44,7 @@ jobs:
           GEMINI_TIMEOUT=5s
           COMPOSE_PROFILES=monitoring
           GF_SECURITY_ADMIN_PASSWORD=$GF_SECURITY_ADMIN_PASSWORD
+          GF_SLACK_WEBHOOK_URL=$GF_SLACK_WEBHOOK_URL
           EOF
 
       - name: Deploy
