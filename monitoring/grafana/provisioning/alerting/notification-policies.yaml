@@ -1,0 +1,11 @@
+apiVersion: 1
+
+# 기본은 slack-warning으로, severity=critical 만 slack-critical(@here 멘션)로 분기한다.
+policies:
+  - orgId: 1
+    receiver: slack-warning
+    group_by: ['grafana_folder', 'alertname']
+    routes:
+      - receiver: slack-critical
+        object_matchers:
+          - ['severity', '=', 'critical']

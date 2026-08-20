@@ -1,0 +1,167 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: gotggam
+    folder: gotggam-alerts
+    interval: 1m
+    rules:
+      # 5xx 에러율 급증 (증상)
+      - uid: gotggam-5xx-error-rate
+        title: 5xx 에러율 급증
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx 에러율이 5%를 초과했습니다"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              refId: A
+              instant: true
+              expr: sum(rate(http_server_requests_seconds_count{job="spring",status=~"5.."}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job="spring"}[5m])), 1)
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.05]
+
+      # 응답 지연 P99 급증 (증상)
+      - uid: gotggam-latency-p99
+        title: 응답 지연 P99 급증
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: critical
+        annotations:
+          summary: "요청 P99 지연이 2초를 초과했습니다"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              refId: A
+              instant: true
+              expr: histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{job="spring"}[5m])))
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2]
+
+      # HikariCP 커넥션풀 고갈 (선행 지표)
+      - uid: gotggam-hikari-pending
+        title: HikariCP 커넥션풀 고갈
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: warning
+        annotations:
+          summary: "커넥션을 대기하는 스레드가 발생했습니다 (풀 고갈)"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              refId: A
+              instant: true
+              expr: max(hikaricp_connections_pending{job="spring"})
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
+      # 디스크 위험 (선행 지표, node-exporter는 운영 Linux에서 제공)
+      - uid: gotggam-disk-usage
+        title: 디스크 사용률 위험
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: warning
+        annotations:
+          summary: "루트 파일시스템 사용률이 85%를 초과했습니다"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              refId: A
+              instant: true
+              expr: 1 - node_filesystem_avail_bytes{job="node",fstype!~"tmpfs|overlay",mountpoint="/"} / node_filesystem_size_bytes{job="node",fstype!~"tmpfs|overlay",mountpoint="/"}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.85]
+
+      # 힙 메모리 위험 (선행 지표)
+      - uid: gotggam-heap-usage
+        title: 힙 메모리 사용률 위험
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Alerting
+        labels:
+          severity: warning
+        annotations:
+          summary: "힙 메모리 사용률이 90%를 초과했습니다"
+        data:
+          - refId: A
+            datasourceUid: prometheus
+            relativeTimeRange:
+              from: 600
+              to: 0
+            model:
+              refId: A
+              instant: true
+              expr: sum(jvm_memory_used_bytes{job="spring",area="heap"}) / sum(jvm_memory_max_bytes{job="spring",area="heap"})
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0.9]

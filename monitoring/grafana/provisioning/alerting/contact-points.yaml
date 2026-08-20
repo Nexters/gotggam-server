@@ -1,0 +1,19 @@
+apiVersion: 1
+
+# 슬랙 Webhook URL은 커밋하지 않고 env(secret)로 주입한다. Grafana 프로비저닝이 $VAR 치환을 지원한다.
+contactPoints:
+  - orgId: 1
+    name: slack-critical
+    receivers:
+      - uid: slack_critical
+        type: slack
+        settings:
+          url: $GF_SLACK_WEBHOOK_URL
+          mentionChannel: here
+  - orgId: 1
+    name: slack-warning
+    receivers:
+      - uid: slack_warning
+        type: slack
+        settings:
+          url: $GF_SLACK_WEBHOOK_URL
