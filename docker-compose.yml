@@ -4,6 +4,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      TZ: Asia/Seoul
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -21,9 +22,13 @@ services:
     ports:
       - "${DB_BIND_ADDR:-127.0.0.1}:5432:5432"
     environment:
+      TZ: Asia/Seoul
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # 볼륨이 이미 UTC로 initdb된 상태라 TZ 환경변수만으로는 postgresql.conf의 timezone이 안 바뀐다.
+    # 실행 옵션으로 서버 timezone을 KST로 못 박는다.
+    command: ["postgres", "-c", "timezone=Asia/Seoul", "-c", "log_timezone=Asia/Seoul"]
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
