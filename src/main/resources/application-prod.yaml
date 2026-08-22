@@ -30,7 +30,10 @@ springdoc:
 app:
   cors:
     allowed-origins:
+      - http://localhost:3000
+      - https://death-client-nine.vercel.app
       - https://gotggam.com
+      - https://dev-api.gotggam.com
   swagger:
     server-url: ${SWAGGER_SERVER_URL:https://api.gotggam.com}
 
