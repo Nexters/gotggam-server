@@ -1,5 +1,6 @@
 package com.nexters.death.result.client;
 
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,6 +14,9 @@ class GeminiWarningMessageClient implements WarningMessageClient {
 
     private static final int MAX_LENGTH = 25;
     private static final String FALLBACK_MESSAGE = "이대로면 오래 못 산다냥.";
+
+    // 모델이 프롬프트 지시를 어기고 "문구(9자)"처럼 글자수를 덧붙이는 재발 빈도를 관찰하기 위한 감지 패턴
+    private static final Pattern TRAILING_CHAR_COUNT = Pattern.compile("[(（]\\s*\\d+\\s*자\\s*[)）]\\s*$");
     private static final String PROMPT_TEMPLATE = """
         너는 사람의 생활 습관을 지켜보며 남은 수명을 경고하는 저승 고양이다.
         아래 정보에서, 남은 수명을 가장 많이 깎은 영역을 근거로 한 문장짜리 경고를 만들어라.
@@ -27,6 +31,7 @@ class GeminiWarningMessageClient implements WarningMessageClient {
         - 섬뜩하고 극적인 어조로 죽음과 줄어드는 수명을 암시하되, 지나치게 잔혹하거나 혐오스럽지는 않게.
         - 고양이 말투로, 문장 끝을 "냥"으로 맺는다. (예: "잠은 선택이 아니라 생존이다냥")
         - 따옴표, 부연 설명, 머리말 없이 경고 문구 자체만 출력.
+        - "(9자)"처럼 글자수나 길이를 함께 적지 않는다. 경고 문구 외에는 아무것도 붙이지 않는다.
         """;
 
     private final GeminiTextGenerator generator;
@@ -58,6 +63,9 @@ class GeminiWarningMessageClient implements WarningMessageClient {
             return FALLBACK_MESSAGE;
         }
         String trimmed = generated.strip();
+        if (TRAILING_CHAR_COUNT.matcher(trimmed).find()) {
+            log.warn("Gemini 경고 메시지에 글자수 표기가 포함됨(추이 관찰용): {}", trimmed);
+        }
         int length = characterCount(trimmed);
         if (length > MAX_LENGTH) {
             log.warn("Gemini 경고 메시지가 {}자를 초과({}자)해 기본 문구로 대체: {}", MAX_LENGTH, length, trimmed);
