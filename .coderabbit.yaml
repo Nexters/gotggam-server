@@ -25,6 +25,8 @@ reviews:
     enabled: true                     # 자동 리뷰 활성화
     drafts: false                     # Draft PR 리뷰 비활성화
     auto_incremental_review: true     # 추가 커밋만 증분 리뷰
+    base_branches:                    # 자동 리뷰 대상 base 브랜치 (develop 대상 PR만 리뷰)
+      - "develop"
 
 chat:
   auto_reply: true                    # PR 코멘트 자동 응답
