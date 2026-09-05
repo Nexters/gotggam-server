@@ -40,4 +40,4 @@ app:
 logging:
   level:
     root: warn
-    com.nexters.death: info
+    com.nexters.gotggam: info
