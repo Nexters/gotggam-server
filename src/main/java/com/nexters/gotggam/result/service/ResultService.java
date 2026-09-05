@@ -1,0 +1,271 @@
+package com.nexters.gotggam.result.service;
+
+import com.nexters.gotggam.consent.service.ConsentService;
+import com.nexters.gotggam.global.exception.BusinessException;
+import com.nexters.gotggam.policy.entity.AgeWeight;
+import com.nexters.gotggam.policy.entity.LifeExpectancyPolicy;
+import com.nexters.gotggam.policy.service.AgeWeightService;
+import com.nexters.gotggam.policy.service.LifeExpectancyPolicyService;
+import com.nexters.gotggam.question.entity.Category;
+import com.nexters.gotggam.question.entity.QuestionOption;
+import com.nexters.gotggam.question.entity.SpecialRule;
+import com.nexters.gotggam.question.service.QuestionService;
+import com.nexters.gotggam.result.client.WarningMessageClient;
+import com.nexters.gotggam.result.client.WarningMessageRequest;
+import com.nexters.gotggam.result.dto.AnswerRequest;
+import com.nexters.gotggam.result.dto.CategoryPenaltyResponse;
+import com.nexters.gotggam.result.dto.CharacterResponse;
+import com.nexters.gotggam.result.dto.ResultCountResponse;
+import com.nexters.gotggam.result.dto.SurveyResultRequest;
+import com.nexters.gotggam.result.dto.SurveyResultResponse;
+import com.nexters.gotggam.result.entity.Gender;
+import com.nexters.gotggam.result.entity.Result;
+import com.nexters.gotggam.result.exception.ResultErrorCode;
+import com.nexters.gotggam.result.repository.ResultRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class ResultService {
+
+    private static final String DEFAULT_TODAY_MESSAGE = "오늘도 무사한 하루 되세요";
+    private static final String DEFAULT_SPECIAL_RULE = "지금처럼만 지내세요. 특별히 고칠 점은 없습니다.";
+    private static final int MAX_SPECIAL_RULES = 3;
+    private static final BigDecimal FLOOR_YEARS_ABOVE_INPUT_AGE = BigDecimal.valueOf(5);
+
+    private final QuestionService questionService;
+    private final LifeExpectancyPolicyService lifeExpectancyPolicyService;
+    private final AgeWeightService ageWeightService;
+    private final ConsentService consentService;
+    private final WarningMessageClient warningMessageClient;
+    private final ResultWriter resultWriter;
+    private final ResultRepository resultRepository;
+    private final Clock clock;
+
+    // 조회와 계산, 외부 API(Gemini) 호출은 트랜잭션 밖에서 수행하고, 실제 저장만 ResultWriter의 트랜잭션에 위임한다.
+    public SurveyResultResponse createResult(SurveyResultRequest request) {
+        // 1. 동의 항목 검증 (fail-fast) - 이후 계산/외부 API 호출 전에 필수 동의 여부부터 확인한다.
+        consentService.validateAgreed(request.consents());
+        // 2. 답변 검증 및 문항/선택지 엔티티 조회
+        List<AnsweredQuestion> answeredQuestions = resolveAnswers(request.answers());
+
+        // 3. 나이대별 가중치 조회 후, 카테고리(body/mind/attitude)별 페널티 합산 및 가중치 적용
+        int inputAge = ageOf(request.birthDate());
+        AgeWeight weights = ageWeightService.getWeightsForAge(inputAge);
+        Map<Category, BigDecimal> penaltyByCategory = sumPenaltyByCategory(answeredQuestions);
+        Map<CategoryPillar, BigDecimal> penaltyByPillar = sumPenaltyByPillar(penaltyByCategory);
+        BigDecimal bodyPenalty = applyWeight(penaltyByPillar, CategoryPillar.BODY, weights.getBodyWeight());
+        BigDecimal mindPenalty = applyWeight(penaltyByPillar, CategoryPillar.MIND, weights.getMindWeight());
+        BigDecimal attitudePenalty = applyWeight(penaltyByPillar, CategoryPillar.ATTITUDE, weights.getAttitudeWeight());
+
+        // 4. 성별 기준 기대수명에서 총 페널티를 차감해 예상수명 계산
+        LifeExpectancyPolicy policy = lifeExpectancyPolicyService.getPolicy();
+        BigDecimal baseLife = request.gender() == Gender.MALE
+            ? policy.getMaleExpectancy()
+            : policy.getFemaleExpectancy();
+        BigDecimal totalPenalty = bodyPenalty.add(mindPenalty).add(attitudePenalty);
+        BigDecimal expectedLife = calculateExpectedLife(baseLife, totalPenalty, inputAge);
+
+        // 5. 외부 API(Gemini) 호출로 경고 메시지 생성, 오늘의 한마디/특별준수사항 결정
+        String warningMessage = warningMessageClient.generateWarningMessage(
+            new WarningMessageRequest(bodyPenalty, mindPenalty, attitudePenalty));
+        String todayMessage = resolveTodayMessage(request.todayMessage());
+        List<SpecialRule> selectedRules = selectSpecialRules(answeredQuestions);
+        LocalDateTime consentedAt = LocalDateTime.now(clock);
+
+        // 6. Result 엔티티 조립 후, 답변/캐릭터/특별준수사항/동의 기록을 한 트랜잭션으로 저장
+        Result result = Result.builder()
+            .name(request.name())
+            .birthDate(request.birthDate())
+            .gender(request.gender())
+            .baseLife(baseLife)
+            .bodyPenalty(bodyPenalty)
+            .mindPenalty(mindPenalty)
+            .attitudePenalty(attitudePenalty)
+            .expectedLife(expectedLife)
+            .todayMessage(todayMessage)
+            .warningMessage(warningMessage)
+            .build();
+        ResultWriter.PersistedResult persisted = resultWriter.write(
+            result, answeredQuestions, request.character(), selectedRules, request.consents(), consentedAt);
+        Result savedResult = persisted.result();
+
+        // 7. 저장된 결과를 응답 DTO로 변환
+        return new SurveyResultResponse(
+            savedResult.getId(),
+            savedResult.getShareToken(),
+            savedResult.getName(),
+            savedResult.getBirthDate(),
+            savedResult.getGender(),
+            toDisplayYears(savedResult.getExpectedLife()),
+            savedResult.getTodayMessage(),
+            savedResult.getWarningMessage(),
+            CharacterResponse.from(persisted.character()),
+            toCategoryPenaltyResponses(penaltyByCategory, weights),
+            toSpecialRuleDescriptions(selectedRules)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ResultCountResponse countParticipants() {
+        long totalParticipants = resultRepository.count();
+        return new ResultCountResponse(totalParticipants);
+    }
+
+    private List<AnsweredQuestion> resolveAnswers(List<AnswerRequest> answers) {
+        List<Long> questionIds = answers.stream().map(AnswerRequest::questionId).toList();
+        Set<Long> distinctQuestionIds = Set.copyOf(questionIds);
+        if (distinctQuestionIds.size() != questionIds.size()) {
+            throw new BusinessException(ResultErrorCode.INVALID_ANSWER);
+        }
+
+        Set<Long> activeQuestionIds = Set.copyOf(questionService.getActiveQuestionIds());
+        if (!distinctQuestionIds.equals(activeQuestionIds)) {
+            throw new BusinessException(ResultErrorCode.INCOMPLETE_SURVEY);
+        }
+
+        List<Long> optionIds = answers.stream().map(AnswerRequest::optionId).toList();
+        Map<Long, QuestionOption> optionsById = questionService.findOptionsByIds(optionIds).stream()
+            .collect(Collectors.toMap(QuestionOption::getId, Function.identity()));
+
+        return answers.stream()
+            .map(answer -> {
+                QuestionOption option = optionsById.get(answer.optionId());
+                if (!option.getQuestion().getId().equals(answer.questionId())) {
+                    throw new BusinessException(ResultErrorCode.INVALID_ANSWER);
+                }
+                return new AnsweredQuestion(option.getQuestion(), option);
+            })
+            .toList();
+    }
+
+    private int ageOf(LocalDate birthDate) {
+        return Period.between(birthDate, LocalDate.now(clock)).getYears();
+    }
+
+    // 카테고리(pillar) 원본 페널티 합에 나이대별 가중치를 곱해 실제 차감량을 구한다.
+    private BigDecimal applyWeight(
+        Map<CategoryPillar, BigDecimal> penaltyByPillar,
+        CategoryPillar pillar,
+        BigDecimal weight
+    ) {
+        BigDecimal rawPenalty = penaltyByPillar.getOrDefault(pillar, BigDecimal.ZERO);
+        return rawPenalty.multiply(weight).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal weightOf(AgeWeight weights, CategoryPillar pillar) {
+        return switch (pillar) {
+            case BODY -> weights.getBodyWeight();
+            case MIND -> weights.getMindWeight();
+            case ATTITUDE -> weights.getAttitudeWeight();
+        };
+    }
+
+    private Map<Category, BigDecimal> sumPenaltyByCategory(List<AnsweredQuestion> answeredQuestions) {
+        return answeredQuestions.stream()
+            .collect(Collectors.groupingBy(
+                answeredQuestion -> answeredQuestion.question().getCategory(),
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    answeredQuestion -> answeredQuestion.option().getLifePenalty(),
+                    BigDecimal::add)
+            ));
+    }
+
+    private Map<CategoryPillar, BigDecimal> sumPenaltyByPillar(Map<Category, BigDecimal> penaltyByCategory) {
+        Map<CategoryPillar, BigDecimal> penaltyByPillar = new EnumMap<>(CategoryPillar.class);
+        penaltyByCategory.forEach((category, penalty) ->
+            penaltyByPillar.merge(CategoryPillar.from(category.getCategoryKey()), penalty, BigDecimal::add));
+        return penaltyByPillar;
+    }
+
+    private BigDecimal calculateExpectedLife(
+        BigDecimal baseLife,
+        BigDecimal totalPenalty,
+        int inputAge
+    ) {
+        BigDecimal expectedLife = baseLife.subtract(totalPenalty);
+        BigDecimal inputAgeYears = BigDecimal.valueOf(inputAge);
+        if (expectedLife.compareTo(inputAgeYears) <= 0) {
+            return inputAgeYears.add(FLOOR_YEARS_ABOVE_INPUT_AGE);
+        }
+        return expectedLife;
+    }
+
+    private String resolveTodayMessage(String todayMessage) {
+        if (todayMessage == null || todayMessage.isBlank()) {
+            return DEFAULT_TODAY_MESSAGE;
+        }
+        return todayMessage;
+    }
+
+    private List<SpecialRule> selectSpecialRules(List<AnsweredQuestion> answeredQuestions) {
+        List<AnsweredQuestion> negativeAnswers = answeredQuestions.stream()
+            .filter(answeredQuestion -> !answeredQuestion.option().isPositive())
+            .toList();
+        if (negativeAnswers.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> questionIds = negativeAnswers.stream()
+            .map(answeredQuestion -> answeredQuestion.question().getId())
+            .toList();
+        Map<Long, SpecialRule> rulesByQuestionId = questionService.findSpecialRulesByQuestionIds(questionIds);
+
+        return negativeAnswers.stream()
+            .filter(answeredQuestion -> rulesByQuestionId.containsKey(answeredQuestion.question().getId()))
+            .sorted(Comparator
+                .comparing((AnsweredQuestion answeredQuestion) -> answeredQuestion.option().getLifePenalty())
+                .reversed()
+                .thenComparing(answeredQuestion -> answeredQuestion.question().getDisplayOrder()))
+            .limit(MAX_SPECIAL_RULES)
+            .map(answeredQuestion -> rulesByQuestionId.get(answeredQuestion.question().getId()))
+            .toList();
+    }
+
+    private List<CategoryPenaltyResponse> toCategoryPenaltyResponses(
+        Map<Category, BigDecimal> penaltyByCategory,
+        AgeWeight weights
+    ) {
+        return penaltyByCategory.entrySet().stream()
+            .sorted(Comparator.comparing(entry -> CategoryPillar.from(entry.getKey().getCategoryKey())))
+            .map(entry -> {
+                CategoryPillar pillar = CategoryPillar.from(entry.getKey().getCategoryKey());
+                // 실제 수명 차감(applyWeight)과 동일하게 2자리 반올림한 뒤 정수 변환해, 표시 합과 반영된 감점이 어긋나지 않게 한다.
+                BigDecimal weightedPenalty = entry.getValue()
+                    .multiply(weightOf(weights, pillar))
+                    .setScale(2, RoundingMode.HALF_UP);
+                return new CategoryPenaltyResponse(
+                    entry.getKey().getId(),
+                    entry.getKey().getName(),
+                    toDisplayYears(weightedPenalty));
+            })
+            .toList();
+    }
+
+    private int toDisplayYears(BigDecimal years) {
+        return years.setScale(0, RoundingMode.HALF_UP).intValueExact();
+    }
+
+    private List<String> toSpecialRuleDescriptions(List<SpecialRule> selectedRules) {
+        if (selectedRules.isEmpty()) {
+            return List.of(DEFAULT_SPECIAL_RULE);
+        }
+        return selectedRules.stream().map(SpecialRule::getDescription).toList();
+    }
+}

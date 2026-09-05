@@ -34,4 +34,4 @@ app:
 logging:
   level:
     root: info
-    com.nexters.death: debug
+    com.nexters.gotggam: debug

@@ -4,7 +4,7 @@
 
 ## 프로젝트 개요
 
-- 패키지: `com.nexters.death`
+- 패키지: `com.nexters.gotggam`
 - Gradle 멀티/단일 모듈 여부: 단일 모듈 (`settings.gradle` 기준)
 
 ## 기술 스택
@@ -30,7 +30,7 @@
 - 최상위는 도메인 단위로 패키지를 나누고, 그 하위에 레이어드 아키텍처를 적용한다.
 
 ```
-com.nexters.death
+com.nexters.gotggam
 ├── member
 │   ├── controller
 │   ├── service
@@ -51,7 +51,7 @@ com.nexters.death
 - 특정 도메인에 속하지 않고 프로젝트 전체에서 공통으로 쓰이는 것(예: Security, CORS, Swagger 등 전역 설정)만 `global` 패키지에 둔다. 도메인 로직이나 특정 도메인에서만 쓰이는 코드는 `global`에 두지 않는다.
 
 ```
-com.nexters.death
+com.nexters.gotggam
 ├── global
 │   └── config
 ├── member

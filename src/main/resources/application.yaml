@@ -1,6 +1,6 @@
 spring:
   application:
-    name: death
+    name: gotggam
 
 springdoc:
   swagger-ui:
