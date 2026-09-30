@@ -11,6 +11,7 @@ public enum ConsentErrorCode implements BaseError {
 
     CONSENT_REQUIRED(HttpStatus.BAD_REQUEST, "CONSENT_001", "필수 동의 항목에 동의해야 합니다."),
     INCOMPLETE_CONSENT(HttpStatus.BAD_REQUEST, "CONSENT_002", "모든 동의 항목을 제출해야 합니다."),
+    CONSENT_DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONSENT_003", "약관 문서를 찾을 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
