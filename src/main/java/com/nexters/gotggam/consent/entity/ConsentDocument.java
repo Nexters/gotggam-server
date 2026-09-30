@@ -36,10 +36,11 @@ public class ConsentDocument {
     @Column(nullable = false, length = 30)
     private ConsentType type;
 
+    // 현재 v1.0.0 형식. 시행일(날짜) 형식으로 바뀔 수 있음 - 팀 합의 필요
     @Column(nullable = false, length = 20)
     private String version;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @CreatedDate

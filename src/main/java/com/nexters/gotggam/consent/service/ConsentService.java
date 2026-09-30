@@ -1,13 +1,16 @@
 package com.nexters.gotggam.consent.service;
 
+import com.nexters.gotggam.consent.dto.ConsentDocumentResponse;
 import com.nexters.gotggam.consent.dto.ConsentRequest;
 import com.nexters.gotggam.consent.entity.Consent;
 import com.nexters.gotggam.consent.entity.ConsentType;
 import com.nexters.gotggam.consent.exception.ConsentErrorCode;
+import com.nexters.gotggam.consent.repository.ConsentDocumentRepository;
 import com.nexters.gotggam.consent.repository.ConsentRepository;
 import com.nexters.gotggam.global.exception.BusinessException;
 import com.nexters.gotggam.result.entity.Result;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +29,7 @@ public class ConsentService {
     );
 
     private final ConsentRepository consentRepository;
+    private final ConsentDocumentRepository consentDocumentRepository;
 
     public void validateAgreed(List<ConsentRequest> consents) {
         // 1. 필수 동의 유형이 중복/누락 없이 정확히 한 번씩 왔는지 검증
@@ -54,5 +58,15 @@ public class ConsentService {
                 .build())
             .toList();
         consentRepository.saveAll(savedConsents);
+    }
+
+    // 버전 문자열은 정렬 기준으로 믿을 수 없어(v1.10.0 < v1.9.0, 날짜 형식 전환 가능성) 나중에 넣은 행을 최신으로 본다
+    @Transactional(readOnly = true)
+    public List<ConsentDocumentResponse> getLatestDocuments() {
+        return Arrays.stream(ConsentType.values())
+            .map(type -> consentDocumentRepository.findFirstByTypeOrderByIdDesc(type)
+                .orElseThrow(() -> new BusinessException(ConsentErrorCode.CONSENT_DOCUMENT_NOT_FOUND)))
+            .map(ConsentDocumentResponse::from)
+            .toList();
     }
 }
