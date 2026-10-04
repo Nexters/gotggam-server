@@ -1,0 +1,9 @@
+# 운영 서버 전용 설정. cd-prod가 .env의 COMPOSE_FILE로 docker-compose.yml과 함께 적용한다.
+services:
+  app:
+    environment:
+      TOSS_MTLS_CERT_PATH: ${TOSS_MTLS_CERT_PATH:?}
+      TOSS_MTLS_KEY_PATH: ${TOSS_MTLS_KEY_PATH:?}
+    volumes:
+      # 앱인토스 mTLS 인증서는 저장소에 두지 않고 운영 서버 호스트에만 보관한다.
+      - ${TOSS_MTLS_HOST_DIR:?}:/secrets/toss:ro
