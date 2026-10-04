@@ -1,4 +1,4 @@
-package com.nexters.gotggam.global.client.toss;
+package com.nexters.gotggam.toss.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,6 +9,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.nexters.gotggam.global.exception.BusinessException;
+import com.nexters.gotggam.toss.exception.TossErrorCode;
 import java.io.IOException;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;

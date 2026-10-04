@@ -1,4 +1,4 @@
-package com.nexters.gotggam.global.client.toss;
+package com.nexters.gotggam.toss.exception;
 
 import com.nexters.gotggam.global.exception.error.BaseError;
 import lombok.Getter;

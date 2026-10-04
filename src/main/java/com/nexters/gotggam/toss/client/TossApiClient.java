@@ -1,6 +1,7 @@
-package com.nexters.gotggam.global.client.toss;
+package com.nexters.gotggam.toss.client;
 
 import com.nexters.gotggam.global.exception.BusinessException;
+import com.nexters.gotggam.toss.exception.TossErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;

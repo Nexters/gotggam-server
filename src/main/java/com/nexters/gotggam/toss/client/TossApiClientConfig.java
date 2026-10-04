@@ -1,4 +1,4 @@
-package com.nexters.gotggam.global.client.toss;
+package com.nexters.gotggam.toss.client;
 
 import java.net.http.HttpClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

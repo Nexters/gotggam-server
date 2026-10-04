@@ -1,4 +1,4 @@
-package com.nexters.gotggam.global.client.toss;
+package com.nexters.gotggam.toss.client;
 
 import org.jspecify.annotations.Nullable;
 
