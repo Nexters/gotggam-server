@@ -42,6 +42,8 @@ app:
       - https://death-client-nine.vercel.app
       - https://gotggam.com
       - https://dev-api.gotggam.com
+      - https://gotggam.apps.tossmini.com # 앱인토스 실제 서비스 환경
+      - https://gotggam.private-apps.tossmini.com # 앱인토스 콘솔 QR 테스트 환경
   swagger:
     server-url: ${SWAGGER_SERVER_URL:https://api.gotggam.com}
 
