@@ -1,4 +1,4 @@
-package com.nexters.gotggam.global.config;
+package com.nexters.gotggam.toss.client;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
