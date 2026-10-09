@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ConsentDocumentRepository extends JpaRepository<ConsentDocument, Long> {
 
-    Optional<ConsentDocument> findFirstByTypeOrderByIdDesc(ConsentType type);
+    Optional<ConsentDocument> findByTypeAndActiveTrue(ConsentType type);
 }

@@ -60,11 +60,10 @@ public class ConsentService {
         consentRepository.saveAll(savedConsents);
     }
 
-    // 버전 문자열은 정렬 기준으로 믿을 수 없어(v1.10.0 < v1.9.0, 날짜 형식 전환 가능성) 나중에 넣은 행을 최신으로 본다
     @Transactional(readOnly = true)
     public List<ConsentDocumentResponse> getLatestDocuments() {
         return Arrays.stream(ConsentType.values())
-            .map(type -> consentDocumentRepository.findFirstByTypeOrderByIdDesc(type)
+            .map(type -> consentDocumentRepository.findByTypeAndActiveTrue(type)
                 .orElseThrow(() -> new BusinessException(ConsentErrorCode.CONSENT_DOCUMENT_NOT_FOUND)))
             .map(ConsentDocumentResponse::from)
             .toList();

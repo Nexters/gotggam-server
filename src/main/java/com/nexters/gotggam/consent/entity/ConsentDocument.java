@@ -43,15 +43,25 @@ public class ConsentDocument {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    // 유형별로 지금 내려줄 문서 한 건만 true. 지난 버전도 동의 근거로 남겨야 하므로 지우지 않고 끈다
+    @Column(name = "is_active", nullable = false)
+    private boolean active;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Builder
-    private ConsentDocument(ConsentType type, String version, String content) {
+    private ConsentDocument(
+        ConsentType type,
+        String version,
+        String content,
+        boolean active
+    ) {
         this.type = type;
         this.version = version;
         this.content = content;
+        this.active = active;
     }
 
 }
