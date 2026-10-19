@@ -31,6 +31,9 @@ jobs:
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
           DB_BIND_ADDR: ${{ secrets.DB_BIND_ADDR }}
           GF_SECURITY_ADMIN_PASSWORD: ${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+          TOSS_MTLS_HOST_DIR: ${{ secrets.TOSS_MTLS_HOST_DIR }}
+          TOSS_MTLS_CERT_PATH: ${{ secrets.TOSS_MTLS_CERT_PATH }}
+          TOSS_MTLS_KEY_PATH: ${{ secrets.TOSS_MTLS_KEY_PATH }}
         run: |
           umask 077
           cat > .env <<EOF
@@ -45,6 +48,10 @@ jobs:
           COMPOSE_PROFILES=monitoring
           GF_SECURITY_ADMIN_PASSWORD=$GF_SECURITY_ADMIN_PASSWORD
           DB_BIND_ADDR=$DB_BIND_ADDR
+          COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+          TOSS_MTLS_HOST_DIR=$TOSS_MTLS_HOST_DIR
+          TOSS_MTLS_CERT_PATH=$TOSS_MTLS_CERT_PATH
+          TOSS_MTLS_KEY_PATH=$TOSS_MTLS_KEY_PATH
           EOF
 
       - name: Deploy
