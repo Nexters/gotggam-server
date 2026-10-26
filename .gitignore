@@ -38,3 +38,8 @@ out/
 
 ### Env ###
 .env
+
+### Secrets ###
+*.key
+*.crt
+*.pem
