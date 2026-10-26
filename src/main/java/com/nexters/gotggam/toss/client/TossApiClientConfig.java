@@ -26,11 +26,15 @@ public class TossApiClientConfig {
         SslBundle sslBundle = sslBundles.getBundle(properties.sslBundle());
         HttpClient httpClient = HttpClient.newBuilder()
             .sslContext(sslBundle.createSslContext())
+            .connectTimeout(properties.connectTimeout())
             .build();
+
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(properties.readTimeout());
 
         return builder
             .baseUrl(properties.baseUrl())
-            .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+            .requestFactory(requestFactory)
             .build();
     }
 }
