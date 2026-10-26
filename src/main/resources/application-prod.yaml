@@ -20,6 +20,14 @@ spring:
     properties:
       hibernate:
         format_sql: false
+  # 앱인토스 mTLS 인증서. 호스트의 TOSS_MTLS_HOST_DIR을 컨테이너 /secrets/toss로 마운트한다. (docker-compose.prod.yml)
+  ssl:
+    bundle:
+      pem:
+        toss:
+          keystore:
+            certificate: file:${TOSS_MTLS_CERT_PATH}
+            private-key: file:${TOSS_MTLS_KEY_PATH}
 
 springdoc:
   api-docs:
@@ -34,8 +42,14 @@ app:
       - https://death-client-nine.vercel.app
       - https://gotggam.com
       - https://dev-api.gotggam.com
+      - https://gotggam.apps.tossmini.com # 앱인토스 실제 서비스 환경
+      - https://gotggam.private-apps.tossmini.com # 앱인토스 콘솔 QR 테스트 환경
   swagger:
     server-url: ${SWAGGER_SERVER_URL:https://api.gotggam.com}
+
+toss:
+  api:
+    enabled: true
 
 logging:
   level:

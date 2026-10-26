@@ -11,7 +11,7 @@ public record ConsentRequest(
     @Schema(description = "동의 문서 유형", example = "PRIVACY_POLICY")
     @NotNull ConsentType type,
 
-    @Schema(description = "동의 문서 버전", example = "v1.0.0")
+    @Schema(description = "동의 문서 버전. 약관 조회 API가 내려준 version 값을 그대로 전달한다.", example = "v1.0.0")
     @NotBlank @Size(max = 20) String version,
 
     @Schema(description = "동의 여부", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
