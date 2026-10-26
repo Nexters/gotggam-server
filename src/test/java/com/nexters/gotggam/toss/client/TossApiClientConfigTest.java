@@ -1,4 +1,4 @@
-package com.nexters.gotggam.global.config;
+package com.nexters.gotggam.toss.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -121,7 +121,7 @@ class TossApiClientConfigTest {
             readTimeout
         );
 
-        return new TossApiClientConfig().tossApiRestClient(properties, sslBundles);
+        return new TossApiClientConfig().tossApiRestClient(RestClient.builder(), properties, sslBundles);
     }
 
     private static void respond(com.sun.net.httpserver.HttpExchange exchange, String body) throws IOException {
