@@ -19,4 +19,4 @@ USER spring:spring
 COPY --from=build /workspace/build/libs/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:-UseBASE64Intrinsics", "-Duser.timezone=Asia/Seoul", "-jar", "/app/app.jar"]
